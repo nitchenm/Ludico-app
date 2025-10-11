@@ -3,6 +3,7 @@ package com.example.ludico_app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
@@ -10,6 +11,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,19 +21,34 @@ import com.example.ludico_app.navigation.NavEvent
 import com.example.ludico_app.navigation.Routes
 import com.example.ludico_app.screens.DetailScreen
 import com.example.ludico_app.screens.HomeScreen
+import com.example.ludico_app.screens.LoginScreen
+import com.example.ludico_app.screens.RegisterScreen
 import com.example.ludico_app.screens.SettingsScreen
 import com.example.ludico_app.ui.all.theme.LudicoappTheme
 import com.example.ludico_app.ui.all.utils.AdaptiveScreenFun
+import com.example.ludico_app.viewmodels.AuthViewModel
 import com.example.ludico_app.viewmodels.NavViewModel
 
 
 class MainActivity : ComponentActivity() {
-
-
+    private val viewModelFactory by lazy {
+        object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                val navViewModel by viewModels<NavViewModel>()
+                if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
+                    return AuthViewModel(navViewModel) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    }
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val navViewModel by viewModels<NavViewModel>()
+        val authViewModel by viewModels<AuthViewModel> { viewModelFactory }
         setContent {
             LudicoappTheme {
                 //El navcontroller maneja los stacks de navegacion
@@ -51,22 +69,45 @@ class MainActivity : ComponentActivity() {
                         is NavEvent.ToDetail -> navController.navigate(Routes.Detail.route)
                         is NavEvent.ToSettings -> navController.navigate(Routes.Settings.route)
                         is NavEvent.Back -> navController.popBackStack()
+                        is NavEvent.ToLogin -> navController.navigate(Routes.Login.route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                        is NavEvent.ToRegister -> navController.navigate(Routes.Register.route)
                         null -> Unit
                     }
                 }
                 //Container que mostrara el destino (pantalla) actual
+
                 NavHost(
                     navController = navController,
-                    startDestination = Routes.Home.route // Primera pantalla seteada
-                ){
-                    composable(Routes.Home.route){
-                        //Se le da el navViewModel al homescreen para que pueda trigerear los eventos
-                        HomeScreen(navViewModel = navViewModel, windowSizeClass = windowSizeClass)
+                    // La pantalla de inicio ahora es Login.
+                    startDestination = Routes.Login.route
+                ) {
+                    composable(Routes.Login.route) {
+                        LoginScreen(
+                            authViewModel = authViewModel,
+                            navViewModel = navViewModel,
+                            windowSizeClass = windowSizeClass
+                        )
                     }
-                    composable(Routes.Detail.route){
+                    composable(Routes.Register.route) {
+                        RegisterScreen(
+                            authViewModel = authViewModel,
+                            navViewModel = navViewModel,
+                            windowSizeClass = windowSizeClass
+                        )
+                    }
+                    composable(Routes.Home.route) {
+                        HomeScreen(
+                            navViewModel = navViewModel,
+                            windowSizeClass = windowSizeClass
+                        )
+                    }
+                    composable(Routes.Detail.route) {
                         DetailScreen(navViewModel = navViewModel)
                     }
-                    composable(Routes.Settings.route){
+                    composable(Routes.Settings.route) {
                         SettingsScreen(navViewModel = navViewModel)
                     }
                 }
