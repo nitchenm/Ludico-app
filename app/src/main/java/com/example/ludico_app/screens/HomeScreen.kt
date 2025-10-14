@@ -209,7 +209,7 @@ private fun EventCard(navViewModel: NavViewModel) {
             )
 
             TextButton(
-                onClick = { navViewModel.onNavEvent(NavEvent.ToDetail) },
+                onClick = { navViewModel.onNavEvent(NavEvent.ToDetail("1")) },
                 modifier = Modifier.align(Alignment.End),
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary) // Verde Ludico
             ) {
