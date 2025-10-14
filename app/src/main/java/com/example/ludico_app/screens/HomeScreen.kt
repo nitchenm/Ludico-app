@@ -1,57 +1,73 @@
 package com.example.ludico_app.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ludico_app.navigation.NavEvent
 import com.example.ludico_app.viewmodels.NavViewModel
 
-// Colores del diseño. Mover a tu archivo Theme/Color.kt si lo prefieres
-private val LightGrayBackground = Color(0xFFF5F5F5)
-private val CardBackgroundColor = Color(0xFFE8F5E9) // Un verde muy claro
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navViewModel: NavViewModel,
-    windowSizeClass: WindowSizeClass // Lo mantenemos para futura adaptabilidad
+    windowSizeClass: WindowSizeClass
 ) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Eventos de Juegos", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surface, // #212121 en modo oscuro
+                    titleContentColor = MaterialTheme.colorScheme.onSurface // Blanco en modo oscuro
                 )
             )
         },
-        // --- BOTÓN FLOTANTE ---
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navViewModel.onNavEvent(NavEvent.ToCreateEvent) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                containerColor = MaterialTheme.colorScheme.primary, // LudicoGreen
+                contentColor = MaterialTheme.colorScheme.onPrimary  // Negro
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Crear Evento")
             }
         },
-        containerColor = LightGrayBackground
+        containerColor = MaterialTheme.colorScheme.background // #121212 en modo oscuro
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -60,38 +76,23 @@ fun HomeScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Saludo y barra de búsqueda
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Hola!, usuario", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    "Hola!, usuario",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground // Blanco en modo oscuro
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 SearchBar()
             }
 
-            // Filtros
             item {
                 FilterSection()
             }
 
-            // Lista de eventos (aquí solo mostramos un ejemplo)
-            items(5) { // Reemplaza esto con tu lista real de eventos
+            items(5) { // Reemplaza con tu lista real
                 EventCard(navViewModel)
-            }
-
-            // Botón de Cargar Más
-            item {
-                Button(
-                    onClick = { /* TODO: Lógica para cargar más eventos */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Cargar Más", fontWeight = FontWeight.Bold)
-                }
             }
         }
     }
@@ -103,15 +104,18 @@ private fun SearchBar() {
         value = "",
         onValueChange = {},
         modifier = Modifier.fillMaxWidth(),
-        placeholder = { Text("buscar eventos", color = Color.Gray) },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Icono de búsqueda") },
-        shape = RoundedCornerShape(30.dp),
+        placeholder = { Text("buscar eventos") },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+        shape = RoundedCornerShape(50), // Completamente redondeado
         colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface, // #212121
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            focusedContainerColor = MaterialTheme.colorScheme.surface
-
         )
     )
 }
@@ -122,11 +126,30 @@ private fun FilterSection() {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Estos serían ExposedDropdownMenuBox en una implementación real
-        OutlinedButton(onClick = { /*TODO*/ }, modifier = Modifier.weight(1f)) {
+        OutlinedButton(
+            onClick = { /*TODO*/ },
+            modifier = Modifier.weight(1f),
+            shape = RoundedCornerShape(50),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            border = ButtonDefaults.outlinedButtonBorder.copy(
+                brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.surfaceVariant)
+            )
+        ) {
             Text("Todos los Eventos")
         }
-        OutlinedButton(onClick = { /*TODO*/ }, modifier = Modifier.weight(1f)) {
+        OutlinedButton(
+            onClick = { /*TODO*/ },
+            modifier = Modifier.weight(1f),
+            shape = RoundedCornerShape(50),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            border = ButtonDefaults.outlinedButtonBorder.copy(
+                brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.surfaceVariant)
+            )
+        ) {
             Text("Todos los Tipos")
         }
     }
@@ -136,41 +159,59 @@ private fun FilterSection() {
 @Composable
 private fun EventCard(navViewModel: NavViewModel) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface, // #212121
+            contentColor = MaterialTheme.colorScheme.onSurface // Blanco
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 "Torneo de Magic: The Gathering",
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = Color.Black
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "Torneo formato Standard con premios para los primeros 3 lugares",
                 fontSize = 14.sp,
-                color = Color.DarkGray
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // Texto secundario, ligeramente transparente
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Fila para Fecha y Hora
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.DateRange, contentDescription = "Icono de fecha", tint = Color.DarkGray)
+                Icon(
+                    Icons.Default.DateRange,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Miércoles, 24 septiembre", fontSize = 14.sp, color = Color.DarkGray)
+                Text(
+                    "Miércoles, 24 septiembre",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
                 Spacer(modifier = Modifier.weight(1f))
-                Text("18:00", fontSize = 14.sp, color = Color.DarkGray)
+                Text(
+                    "18:00",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Reino de los duelos", fontSize = 14.sp, color = Color.DarkGray, fontWeight = FontWeight.SemiBold)
-            Text("11/16 Participantes", fontSize = 14.sp, color = Color.DarkGray)
+
+            Text("Reino de los duelos", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                "11/16 Participantes",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
 
             TextButton(
                 onClick = { navViewModel.onNavEvent(NavEvent.ToDetail) },
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier.align(Alignment.End),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary) // Verde Ludico
             ) {
                 Text("Ver Detalles", fontWeight = FontWeight.Bold)
             }

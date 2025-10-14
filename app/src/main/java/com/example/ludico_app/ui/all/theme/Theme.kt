@@ -17,16 +17,20 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = LudicoGreen,                 // El color de acento se mantiene
-    onPrimary = Black,
-    secondary = LudicoLightGray,           // El secundario ahora es claro
-    onSecondary = Black,
-    background = LudicoDark,               // El fondo general es oscuro
-    onBackground = White,                  // El texto general es blanco
-    surface = Color(0xFF2C2C2C),           // Las tarjetas son un poco más claras que el fondo
-    onSurface = White,
-    surfaceVariant = Color(0xFF3E3E3E),   // Los campos de texto son un poco más claros
-    onSurfaceVariant = Color(0xFFB0B0B0)   // El texto placeholder es gris claro
+    primary = LudicoGreen,                  // Verde para acciones principales (FAB)
+    onPrimary = Black,                      // Texto/icono negro sobre el verde
+
+    background = Color(0xFF121212),         // Fondo general casi negro, estándar de Material Design
+    onBackground = White,                   // Texto blanco sobre el fondo
+
+    surface = LudicoDark,                   // Superficies como tarjetas y TopAppBar (tu color #212121)
+    onSurface = White,                      // Texto blanco sobre estas superficies
+
+    surfaceVariant = Color(0xFF424242),     // Un gris más claro para elementos como botones de filtro
+    onSurfaceVariant = White,               // Texto blanco sobre estos elementos
+
+    secondary = LudicoGreen,                // Usamos el verde también como secundario
+    onSecondary = Black                     // Texto negro sobre verde
 )
 
 

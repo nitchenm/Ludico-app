@@ -16,9 +16,7 @@ val Black = Color.Black
 val Gray = Color.Gray
 
 val LudicoGreen = Color(0xFF00FF7F)
-val LudicoDarkBG = Color(0xFF212121) // Fondo oscuro del header
-val LudicoFieldGray = Color(0xFFF0F0F0) // campos de texto
-val LudicoBlueFacebook = Color(0xFF1877F2)
+
 // Tus colores personalizados base // Verde brillante para acciones principales (Primary)
 val LudicoDark = Color(0xFF212121)         // Negro para fondos, texto y botones secundarios (Secondary)
 val LudicoLightGray = Color(0xFFF0F0F0)    // Gris claro para fondos de campos de texto (SurfaceVariant)
