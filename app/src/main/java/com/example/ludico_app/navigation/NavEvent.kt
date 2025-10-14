@@ -5,7 +5,11 @@ sealed interface NavEvent {
     data object ToRegister : NavEvent
 
     data object ToHome : NavEvent
-    data object ToDetail : NavEvent
+    data class ToDetail(val eventId: String) : NavEvent
     data object ToSettings : NavEvent
     data object Back : NavEvent
+
+    data object ToCreateEvent: NavEvent
+
+
 }

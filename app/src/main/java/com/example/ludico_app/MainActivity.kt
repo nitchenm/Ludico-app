@@ -14,11 +14,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.ludico_app.navigation.NavEvent
 import com.example.ludico_app.navigation.Routes
+import com.example.ludico_app.screens.CreateEventScreen
 import com.example.ludico_app.screens.DetailScreen
 import com.example.ludico_app.screens.HomeScreen
 import com.example.ludico_app.screens.LoginScreen
@@ -66,9 +69,11 @@ class MainActivity : ComponentActivity() {
                             //Si ya estoy en home, no se crea otra instancia de este
                             launchSingleTop = true
                         }
-                        is NavEvent.ToDetail -> navController.navigate(Routes.Detail.route)
+                        is NavEvent.ToDetail -> navController.navigate(Routes.Detail.createRoute((navEvent as NavEvent.ToDetail).eventId))
                         is NavEvent.ToSettings -> navController.navigate(Routes.Settings.route)
+                        is NavEvent.ToRegister -> navController.navigate(Routes.Register.route)
                         is NavEvent.Back -> navController.popBackStack()
+                        is NavEvent.ToCreateEvent -> navController.navigate(Routes.CreateEvent.route)
                         is NavEvent.ToLogin -> navController.navigate(Routes.Login.route) {
                             popUpTo(navController.graph.startDestinationId) { inclusive = true }
                             launchSingleTop = true
@@ -98,15 +103,23 @@ class MainActivity : ComponentActivity() {
                             windowSizeClass = windowSizeClass
                         )
                     }
+                    composable(Routes.CreateEvent.route){
+                        CreateEventScreen(navViewModel = navViewModel)
+                    }
                     composable(Routes.Home.route) {
                         HomeScreen(
                             navViewModel = navViewModel,
                             windowSizeClass = windowSizeClass
                         )
                     }
-                    composable(Routes.Detail.route) {
-                        DetailScreen(navViewModel = navViewModel)
-                    }
+                    composable(
+                        route = Routes.Detail.route,
+                        arguments = listOf(navArgument("eventId"){type = NavType.StringType})
+                    ) {
+                        DetailScreen(
+                            navViewModel = navViewModel
+
+                        ) }
                     composable(Routes.Settings.route) {
                         SettingsScreen(navViewModel = navViewModel)
                     }
