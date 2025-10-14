@@ -1,173 +1,217 @@
 package com.example.ludico_app.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.password
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.ludico_app.navigation.NavEvent
-import com.example.ludico_app.viewmodels.AuthViewModel
-import com.example.ludico_app.viewmodels.NavViewModel
+import androidx.compose.ui.unit.sp
 import com.example.ludico_app.R
+import com.example.ludico_app.navigation.NavEvent
+import com.example.ludico_app.viewmodels.NavViewModel
+import com.example.ludico_app.viewmodels.*
 
-@Composable
-fun RegisterScreen(authViewModel: AuthViewModel,
-                   navViewModel: NavViewModel,
-                   windowSizeClass: WindowSizeClass) {
-    val widthSizeClass = windowSizeClass.widthSizeClass
-
-
-    when (widthSizeClass) {
-        WindowWidthSizeClass.Compact -> CompactRegisterLayout(authViewModel, navViewModel)
-        else -> ExpandedRegisterLayout(authViewModel, navViewModel)
-    }
-}
 
 
 @Composable
-private fun CompactRegisterLayout(authViewModel: AuthViewModel, navViewModel: NavViewModel) {
+fun RegisterScreen(
+    authViewModel: AuthViewModel,
+    navViewModel: NavViewModel,
+    windowSizeClass: WindowSizeClass
+) {
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .background(Color.White)
+    ) {
+
+        RegisterHeader()
+
+        RegisterFormCard(authViewModel, navViewModel)
+    }
+}
+
+@Composable
+private fun RegisterHeader() {
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .background(LudicoDarkBG),
         contentAlignment = Alignment.Center
     ) {
-
-        Column(
-            modifier = Modifier.verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            RegisterForm(authViewModel = authViewModel, navViewModel = navViewModel)
-        }
-    }
-}
-
-
-@Composable
-private fun ExpandedRegisterLayout(authViewModel: AuthViewModel, navViewModel: NavViewModel) {
-    Row(
-        modifier = Modifier.fillMaxSize(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        Box(modifier = Modifier.weight(0.5f)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
                 painter = painterResource(id = R.drawable.logo),
-                contentDescription = "Register Image",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                contentScale = ContentScale.Fit
+                contentDescription = "Ludico Logo",
+                modifier = Modifier.size(60.dp)
             )
-        }
-
-        Box(
-            modifier = Modifier
-                .weight(0.5f)
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            RegisterForm(authViewModel = authViewModel, navViewModel = navViewModel)
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = "Ludico",
+                color = Color.White,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
 
-// Composable reutilizable que contiene solo el formulario de registro.
+
 @Composable
-private fun RegisterForm(authViewModel: AuthViewModel, navViewModel: NavViewModel) {
+private fun RegisterFormCard(authViewModel: AuthViewModel, navViewModel: NavViewModel) {
     val uiState by authViewModel.uiState.collectAsState()
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 150.dp)
+            .verticalScroll(rememberScrollState())
     ) {
-        Text(text = "Crear Cuenta", style = MaterialTheme.typography.headlineLarge)
-        Spacer(modifier = Modifier.height(16.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+                .background(Color.White)
+                .padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Crear Cuenta",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // Campo de Email
-        OutlinedTextField(
-            value = uiState.email,
-            onValueChange = { authViewModel.onEmailChange(it) },
-            label = { Text("Email") },
-            isError = uiState.emailError != null,
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-        uiState.emailError?.let { Text(text = it, color = MaterialTheme.colorScheme.error) }
+            // Campo de Email
+            TextField(
+                value = uiState.email,
+                onValueChange = { authViewModel.onEmailChange(it) },
+                placeholder = { Text("Email", color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    unfocusedContainerColor = LudicoFieldGray,
+                    focusedContainerColor = LudicoFieldGray,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            )
+            uiState.emailError?.let { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Campo de Contraseña
-        OutlinedTextField(
-            value = uiState.password,
-            onValueChange = { authViewModel.onPasswordChange(it) },
-            label = { Text("Contraseña") },
-            isError = uiState.passwordError != null,
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-        uiState.passwordError?.let { Text(text = it, color = MaterialTheme.colorScheme.error) }
+            // Campo de Contraseña
+            TextField(
+                value = uiState.password,
+                onValueChange = { authViewModel.onPasswordChange(it) },
+                placeholder = { Text("Contraseña", color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    unfocusedContainerColor = LudicoFieldGray,
+                    focusedContainerColor = LudicoFieldGray,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+                singleLine = true,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    val image = if (passwordVisible) R.drawable.ic_launcher_foreground else R.drawable.ic_launcher_foreground
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(painterResource(id = image), "Toggle password visibility")
+                    }
+                }
+            )
+            uiState.passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Campo de Confirmar Contraseña
-        OutlinedTextField(
-            value = uiState.confirmPassword,
-            onValueChange = { authViewModel.onConfirmPasswordChange(it) },
-            label = { Text("Confirmar Contraseña") },
-            isError = uiState.confirmPasswordError != null,
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-        uiState.confirmPasswordError?.let { Text(text = it, color = MaterialTheme.colorScheme.error) }
+            // Campo de Confirmar Contraseña
+            TextField(
+                value = uiState.confirmPassword,
+                onValueChange = { authViewModel.onConfirmPasswordChange(it) },
+                placeholder = { Text("Confirmar Contraseña", color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    unfocusedContainerColor = LudicoFieldGray,
+                    focusedContainerColor = LudicoFieldGray,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+                singleLine = true,
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    val image = if (confirmPasswordVisible) R.drawable.ic_launcher_foreground else R.drawable.ic_launcher_foreground
+                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                        Icon(painterResource(id = image), "Toggle password visibility")
+                    }
+                }
+            )
+            uiState.confirmPasswordError?.let { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // Indicador de Carga o Botón de Registro
-        if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.padding(vertical = 16.dp))
-        } else {
+            // Botón de Registro (Sign In)
             Button(
                 onClick = { authViewModel.register() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = LudicoDarkBG, contentColor = Color.White)
             ) {
-                Text("Registrarse")
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                } else {
+                    Text("Sign In", fontWeight = FontWeight.Bold)
+                }
             }
-        }
+            Spacer(modifier = Modifier.height(12.dp))
 
-        // Botón para volver a Login
-        TextButton(onClick = { navViewModel.onNavEvent(NavEvent.ToLogin) }) {
-            Text("¿Ya tienes una cuenta? Inicia sesión")
+            // Botón para volver a Login
+            Button(
+                onClick = { navViewModel.onNavEvent(NavEvent.ToLogin) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = LudicoGreen, contentColor = Color.Black)
+            ) {
+                Text("Ya tengo una cuenta", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

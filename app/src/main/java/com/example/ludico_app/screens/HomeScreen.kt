@@ -1,186 +1,179 @@
 package com.example.ludico_app.screens
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.ludico_app.R
-import com.example.ludico_app.viewmodels.NavViewModel
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.unit.sp
 import com.example.ludico_app.navigation.NavEvent
+import com.example.ludico_app.viewmodels.NavViewModel
+
+// Colores del diseño. Mover a tu archivo Theme/Color.kt si lo prefieres
+private val LightGrayBackground = Color(0xFFF5F5F5)
+private val CardBackgroundColor = Color(0xFFE8F5E9) // Un verde muy claro
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navViewModel: NavViewModel,
-               windowSizeClass: WindowSizeClass) {
-    val widthSizeClass = windowSizeClass.widthSizeClass
+fun HomeScreen(
+    navViewModel: NavViewModel,
+    windowSizeClass: WindowSizeClass // Lo mantenemos para futura adaptabilidad
+) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(text = "Ludico App")})
-        }
-    ) { innerPadding ->
-        when (widthSizeClass) {
-            WindowWidthSizeClass.Compact -> {
-                CompactScreenContent(
-                    modifier = Modifier.padding(innerPadding),
-                    navViewModel = navViewModel
-                    )
-            }
-            else -> {
-                ExpandedScreenContent(
-                    modifier = Modifier.padding(innerPadding),
-                    navViewModel = navViewModel
+            CenterAlignedTopAppBar(
+                title = { Text("Eventos de Juegos", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
+            )
+        },
+        // --- BOTÓN FLOTANTE ---
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navViewModel.onNavEvent(NavEvent.ToCreateEvent) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Crear Evento")
+            }
+        },
+        containerColor = LightGrayBackground
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Saludo y barra de búsqueda
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Hola!, usuario", style = MaterialTheme.typography.headlineSmall)
+                Spacer(modifier = Modifier.height(16.dp))
+                SearchBar()
+            }
+
+            // Filtros
+            item {
+                FilterSection()
+            }
+
+            // Lista de eventos (aquí solo mostramos un ejemplo)
+            items(5) { // Reemplaza esto con tu lista real de eventos
+                EventCard(navViewModel)
+            }
+
+            // Botón de Cargar Más
+            item {
+                Button(
+                    onClick = { /* TODO: Lógica para cargar más eventos */ },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Cargar Más", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
 }
 
-
-//Funcion para manejo de pantallas compactas
 @Composable
-private fun CompactScreenContent(modifier: Modifier = Modifier, navViewModel: NavViewModel){
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ){
-        WelcomeText()
-        TestButton(navViewModel = navViewModel)
-        LogoImage()
-        SettingsCard()
-        CustomDivider()
-        NameTextField()
-    }
-}
-//Funcion para manejo de pantallas medias y expandidas (doble columna)
-@Composable
-private fun ExpandedScreenContent(modifier: Modifier = Modifier, navViewModel: NavViewModel){
-    Row(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(20.dp)
-    ){
+private fun SearchBar() {
+    TextField(
+        value = "",
+        onValueChange = {},
+        modifier = Modifier.fillMaxWidth(),
+        placeholder = { Text("buscar eventos", color = Color.Gray) },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Icono de búsqueda") },
+        shape = RoundedCornerShape(30.dp),
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedContainerColor = MaterialTheme.colorScheme.surface
 
-    }
-}
-
-@Composable
-private fun WelcomeText(){
-    Text(
-        text = "¡Bienvenido a Ludico!",
-        style = MaterialTheme.typography.headlineMedium,
-        color = MaterialTheme.colorScheme.onBackground
+        )
     )
 }
 
 @Composable
-private fun TestButton(navViewModel: NavViewModel){
-    Button(
-        onClick = {navViewModel.onNavEvent(NavEvent.ToHome)},
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        )
-    ){
-        Text("Ir al Home")
+private fun FilterSection() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Estos serían ExposedDropdownMenuBox en una implementación real
+        OutlinedButton(onClick = { /*TODO*/ }, modifier = Modifier.weight(1f)) {
+            Text("Todos los Eventos")
+        }
+        OutlinedButton(onClick = { /*TODO*/ }, modifier = Modifier.weight(1f)) {
+            Text("Todos los Tipos")
+        }
     }
 }
 
+
 @Composable
-private fun LogoImage(){
-    Image(
-        painter = painterResource(id = R.drawable.logo),
-        contentDescription = "Logo App",
+private fun EventCard(navViewModel: NavViewModel) {
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp),
-        contentScale = ContentScale.Fit
-    )
-}
-@Composable
-private fun SettingsCard() {
-    Card(
-        modifier = Modifier.padding(top = 16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ){
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+            .clip(RoundedCornerShape(16.dp)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Activar modo oscuro",
-                color = MaterialTheme.colorScheme.onSurface
+                "Torneo de Magic: The Gathering",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Color.Black
             )
-            var checked by remember { mutableStateOf(false) }
-            Switch(
-                checked = checked,
-                onCheckedChange = {checked = it},
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.primary
-                )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "Torneo formato Standard con premios para los primeros 3 lugares",
+                fontSize = 14.sp,
+                color = Color.DarkGray
             )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Fila para Fecha y Hora
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.DateRange, contentDescription = "Icono de fecha", tint = Color.DarkGray)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Miércoles, 24 septiembre", fontSize = 14.sp, color = Color.DarkGray)
+                Spacer(modifier = Modifier.weight(1f))
+                Text("18:00", fontSize = 14.sp, color = Color.DarkGray)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Reino de los duelos", fontSize = 14.sp, color = Color.DarkGray, fontWeight = FontWeight.SemiBold)
+            Text("11/16 Participantes", fontSize = 14.sp, color = Color.DarkGray)
+
+            TextButton(
+                onClick = { navViewModel.onNavEvent(NavEvent.ToDetail) },
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text("Ver Detalles", fontWeight = FontWeight.Bold)
+            }
         }
     }
-}
-
-@Composable
-private fun CustomDivider() {
-    HorizontalDivider(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        thickness = 1.dp
-    )
-}
-@Composable
-private fun NameTextField() {
-    var text by remember {mutableStateOf("")}
-    TextField(
-        value = text,
-        onValueChange = {text = it},
-        label = {Text ("Dale con tu nombre")},
-        modifier = Modifier.fillMaxWidth(),
-        colors = TextFieldDefaults.colors(
-            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    )
 }

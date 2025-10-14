@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.ludico_app.navigation.NavEvent
 import com.example.ludico_app.navigation.Routes
+import com.example.ludico_app.screens.CreateEventScreen
 import com.example.ludico_app.screens.DetailScreen
 import com.example.ludico_app.screens.HomeScreen
 import com.example.ludico_app.screens.LoginScreen
@@ -68,7 +69,9 @@ class MainActivity : ComponentActivity() {
                         }
                         is NavEvent.ToDetail -> navController.navigate(Routes.Detail.route)
                         is NavEvent.ToSettings -> navController.navigate(Routes.Settings.route)
+                        is NavEvent.ToRegister -> navController.navigate(Routes.Register.route)
                         is NavEvent.Back -> navController.popBackStack()
+                        is NavEvent.ToCreateEvent -> navController.navigate(Routes.CreateEvent.route)
                         is NavEvent.ToLogin -> navController.navigate(Routes.Login.route) {
                             popUpTo(navController.graph.startDestinationId) { inclusive = true }
                             launchSingleTop = true
@@ -97,6 +100,9 @@ class MainActivity : ComponentActivity() {
                             navViewModel = navViewModel,
                             windowSizeClass = windowSizeClass
                         )
+                    }
+                    composable(Routes.CreateEvent.route){
+                        CreateEventScreen(navViewModel = navViewModel)
                     }
                     composable(Routes.Home.route) {
                         HomeScreen(

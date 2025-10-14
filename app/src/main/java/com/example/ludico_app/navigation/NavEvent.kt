@@ -8,4 +8,6 @@ sealed interface NavEvent {
     data object ToDetail : NavEvent
     data object ToSettings : NavEvent
     data object Back : NavEvent
+
+    data object ToCreateEvent: NavEvent
 }

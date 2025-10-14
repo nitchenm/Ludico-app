@@ -6,4 +6,6 @@ sealed class Routes (val route: String) {
     data object Settings : Routes ("settings")
     data object Login : Routes ("login")
     data object Register: Routes ("register")
+
+    data object CreateEvent: Routes ("create_event")
 }
