@@ -17,11 +17,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ludico_app.model.Comment
 import com.example.ludico_app.navigation.NavEvent
 import com.example.ludico_app.viewmodels.NavViewModel
 import com.example.ludico_app.model.EventDetailUiState
@@ -35,8 +34,6 @@ fun EventDetailScreen(
     eventDetailViewModel: EventDetailViewModel = viewModel()
 ) {
     val uiState by eventDetailViewModel.uiState.collectAsState()
-
-    // Decidimos qué layout usar basado en el ancho de la pantalla
     val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
 
     Scaffold(
@@ -44,7 +41,7 @@ fun EventDetailScreen(
             DetailTopAppBar(
                 isUserTheCreator = uiState.isUserTheCreator,
                 onBackPressed = { navViewModel.onNavEvent(NavEvent.Back) },
-                onEditPressed = { /* TODO: Navegar a pantalla de edición */ }
+                onEditPressed = { navViewModel.onNavEvent(NavEvent.ToEditEvent(uiState.id)) }
             )
         },
         floatingActionButton = {
@@ -55,66 +52,79 @@ fun EventDetailScreen(
         }
     ) { innerPadding ->
         if (isExpanded) {
-            ExpandedDetailLayout(uiState = uiState, modifier = Modifier.padding(innerPadding))
+            ExpandedDetailLayout(
+                uiState = uiState,
+                onCommentChange = eventDetailViewModel::onNewCommentChange,
+                onCommentSubmit = eventDetailViewModel::submitComment,
+                modifier = Modifier.padding(innerPadding)
+            )
         } else {
-            CompactDetailLayout(uiState = uiState, modifier = Modifier.padding(innerPadding))
+            CompactDetailLayout(
+                uiState = uiState,
+                onCommentChange = eventDetailViewModel::onNewCommentChange,
+                onCommentSubmit = eventDetailViewModel::submitComment,
+                modifier = Modifier.padding(innerPadding)
+            )
         }
     }
 }
 
-// --- Layouts Adaptables ---
-
 @Composable
-private fun CompactDetailLayout(uiState: EventDetailUiState, modifier: Modifier = Modifier) {
+private fun CompactDetailLayout(
+    uiState: EventDetailUiState,
+    onCommentChange: (String) -> Unit,
+    onCommentSubmit: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
+        modifier = modifier.fillMaxSize().padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item {
-            EventHeader(uiState)
-            Spacer(Modifier.height(16.dp))
-            EventDescription(uiState)
-            Spacer(Modifier.height(16.dp))
-            LocationPreview() // Placeholder para el mapa
-        }
+        item { EventHeader(uiState) }
+        item { EventDescription(uiState) }
+        item { LocationPreview() }
         item { SectionTitle("Participantes (${uiState.currentParticipants}/${uiState.maxParticipants})") }
-        items(uiState.participants) { participant ->
-            ParticipantItem(name = participant.name)
+        items(uiState.participants) { participant -> ParticipantItem(name = participant.name) }
+        item { 
+            CommentSection(
+                comments = uiState.comments,
+                newCommentText = uiState.newCommentText,
+                onCommentChange = onCommentChange,
+                onCommentSubmit = onCommentSubmit
+            ) 
         }
-        item { SectionTitle("Comentarios") }
-        items(uiState.comments) { comment ->
-            CommentItem(author = comment.author, text = comment.text)
-        }
-        item { Spacer(Modifier.height(80.dp)) } // Espacio para el FAB
+        item { Spacer(Modifier.height(80.dp)) }
     }
 }
 
 @Composable
-private fun ExpandedDetailLayout(uiState: EventDetailUiState, modifier: Modifier = Modifier) {
+private fun ExpandedDetailLayout(
+    uiState: EventDetailUiState,
+    onCommentChange: (String) -> Unit,
+    onCommentSubmit: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(modifier = modifier.fillMaxSize()) {
-        // Columna izquierda con detalles y comentarios
         LazyColumn(
-            modifier = Modifier
-                .weight(0.6f)
-                .padding(horizontal = 24.dp),
+            modifier = Modifier.weight(0.6f).padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { EventHeader(uiState) }
             item { EventDescription(uiState) }
             item { SectionTitle("Participantes (${uiState.currentParticipants}/${uiState.maxParticipants})") }
             items(uiState.participants) { participant -> ParticipantItem(name = participant.name) }
-            item { SectionTitle("Comentarios") }
-            items(uiState.comments) { comment -> CommentItem(author = comment.author, text = comment.text) }
+            item { 
+                CommentSection(
+                    comments = uiState.comments,
+                    newCommentText = uiState.newCommentText,
+                    onCommentChange = onCommentChange,
+                    onCommentSubmit = onCommentSubmit
+                ) 
+            }
             item { Spacer(Modifier.height(80.dp)) }
         }
-        // Columna derecha con el mapa
         Box(
-            modifier = Modifier
-                .weight(0.4f)
-                .fillMaxHeight()
-                .padding(end = 24.dp, top = 16.dp),
+            modifier = Modifier.weight(0.4f).fillMaxHeight().padding(end = 24.dp, top = 16.dp),
             contentAlignment = Alignment.Center
         ) {
             LocationPreview(modifier = Modifier.fillMaxSize())
@@ -122,28 +132,17 @@ private fun ExpandedDetailLayout(uiState: EventDetailUiState, modifier: Modifier
     }
 }
 
-
-// --- Componentes de la UI ---
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DetailTopAppBar(isUserTheCreator: Boolean, onBackPressed: () -> Unit, onEditPressed: () -> Unit) {
     TopAppBar(
         title = { Text("Detalles del Evento") },
-        navigationIcon = {
-            IconButton(onClick = onBackPressed) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
-            }
-        },
+        navigationIcon = { IconButton(onClick = onBackPressed) { Icon(Icons.Default.ArrowBack, "Volver") } },
         actions = {
             if (isUserTheCreator) {
-                IconButton(onClick = onEditPressed) {
-                    Icon(Icons.Default.Edit, contentDescription = "Editar Evento")
-                }
+                IconButton(onClick = onEditPressed) { Icon(Icons.Default.Edit, "Editar") }
             }
-            IconButton(onClick = { /* TODO: Lógica para compartir */ }) {
-                Icon(Icons.Default.Share, contentDescription = "Compartir")
-            }
+            IconButton(onClick = { /* TODO */ }) { Icon(Icons.Default.Share, "Compartir") }
         }
     )
 }
@@ -155,13 +154,7 @@ private fun RsvpFab(rsvpState: RsvpState, onClick: () -> Unit) {
         RsvpState.NOT_JOINED -> Triple("Unirse", Icons.Default.Add, MaterialTheme.colorScheme.primary)
         RsvpState.FULL -> Triple("Completo", Icons.Default.Close, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
     }
-    ExtendedFloatingActionButton(
-        text = { Text(text) },
-        icon = { Icon(icon, contentDescription = null) },
-        onClick = onClick,
-        containerColor = color,
-        contentColor = if (color == MaterialTheme.colorScheme.primary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError
-    )
+    ExtendedFloatingActionButton(text = { Text(text) }, icon = { Icon(icon, null) }, onClick = onClick, containerColor = color)
 }
 
 @Composable
@@ -186,13 +179,8 @@ fun EventDescription(uiState: EventDetailUiState) {
 
 @Composable
 fun LocationPreview(modifier: Modifier = Modifier) {
-    Card(modifier = modifier.height(200.dp), shape = RoundedCornerShape(12.dp)) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
+    Card(modifier = modifier.height(200.dp)) {
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant), Alignment.Center) {
             Text("Vista previa del mapa", style = MaterialTheme.typography.bodyMedium)
         }
     }
@@ -201,23 +189,58 @@ fun LocationPreview(modifier: Modifier = Modifier) {
 @Composable
 private fun ParticipantItem(name: String) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-        Box(modifier = Modifier
-            .size(32.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant))
+        Box(Modifier.size(32.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant))
         Spacer(Modifier.width(16.dp))
         Text(name, style = MaterialTheme.typography.bodyLarge)
     }
 }
 
 @Composable
-private fun CommentItem(author: String, text: String) {
+private fun CommentSection(
+    comments: List<Comment>,
+    newCommentText: String,
+    onCommentChange: (String) -> Unit,
+    onCommentSubmit: () -> Unit
+) {
+    Column {
+        SectionTitle("Comentarios")
+        if (comments.isEmpty()) {
+            Text(
+                text = "Aún no hay comentarios. ¡Sé el primero en comentar!",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        } else {
+            comments.forEach { comment ->
+                CommentItem(author = comment.author, text = comment.text, timestamp = comment.timestamp)
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        OutlinedTextField(
+            value = newCommentText,
+            onValueChange = onCommentChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Escribe un comentario...") },
+            trailingIcon = {
+                IconButton(onClick = onCommentSubmit, enabled = newCommentText.isNotBlank()) {
+                    Icon(Icons.Default.Send, contentDescription = "Enviar comentario")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun CommentItem(author: String, text: String, timestamp: String) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(Modifier.padding(12.dp)) {
-            Text(author, fontWeight = FontWeight.Bold)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(author, fontWeight = FontWeight.Bold)
+                Text(timestamp, style = MaterialTheme.typography.bodySmall)
+            }
             Text(text)
         }
     }
@@ -226,7 +249,7 @@ private fun CommentItem(author: String, text: String) {
 @Composable
 fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+        Icon(icon, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.width(8.dp))
         Text(text, style = MaterialTheme.typography.bodyLarge)
     }

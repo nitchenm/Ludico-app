@@ -1,21 +1,46 @@
+
 package com.example.ludico_app.viewmodels
 
-import androidx.activity.result.launch
-import androidx.compose.animation.core.copy
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ludico_app.model.CreateEventUiState
-import kotlinx.coroutines.delay
+import com.example.ludico_app.model.EventDetailUiState
+import com.example.ludico_app.model.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class CreateEventViewModel: ViewModel() {
+class CreateEventViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
+    private val eventId: String? = savedStateHandle.get<String>("eventId")
+
     private val _uiState = MutableStateFlow(CreateEventUiState())
     val uiState = _uiState.asStateFlow()
 
-    // --- FUNCIONES PARA ACTUALIZAR EL ESTADO DESDE LA UI ---
+    init {
+        if (eventId != null) {
+            loadEventData(eventId)
+        }
+    }
+
+    private fun loadEventData(id: String) {
+        val event = EventRepository.getEvent(id)
+        if (event != null) {
+            _uiState.update {
+                it.copy(
+                    title = event.eventTitle,
+                    description = event.description,
+                    gameType = event.gameType,
+                    date = event.date,
+                    time = event.time,
+                    location = event.location,
+                    maxParticipants = event.maxParticipants.toString(),
+                    isEditing = true
+                )
+            }
+        }
+    }
 
     fun onTitleChange(newTitle: String) {
         _uiState.update { it.copy(title = newTitle, titleError = null) }
@@ -45,27 +70,38 @@ class CreateEventViewModel: ViewModel() {
         _uiState.update { it.copy(maxParticipants = newMax) }
     }
 
-    // --- LÓGICA DE NEGOCIO ---
-
-    fun createEvent() {
+    fun saveEvent() {
         if (!validateFields()) {
-            return // Si la validación falla, no continuamos.
+            return
         }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            // Simulación de una llamada a la red o base de datos
-            println("Creando evento: ${_uiState.value}")
-            delay(2000) // Simula la espera
+            val currentState = _uiState.value
+            val event = EventDetailUiState(
+                id = eventId ?: "", // Si es nuevo, el repo le asignará un id
+                eventTitle = currentState.title,
+                description = currentState.description,
+                gameType = currentState.gameType,
+                date = currentState.date,
+                time = currentState.time,
+                location = currentState.location,
+                maxParticipants = currentState.maxParticipants.toIntOrNull() ?: 0,
+            )
 
-            // Una vez completado, actualizamos el estado para indicar éxito.
+            if (currentState.isEditing) {
+                EventRepository.updateEvent(event)
+            } else {
+                EventRepository.addEvent(event)
+            }
+
             _uiState.update { it.copy(isLoading = false, eventCreatedSuccessfully = true) }
         }
     }
 
     fun resetNavigationState() {
-        _uiState.update { it.copy(eventCreatedSuccessfully = false) }
+        _uiState.update { it.copy(eventCreatedSuccessfully = false, createdEventId = null) }
     }
 
     private fun validateFields(): Boolean {

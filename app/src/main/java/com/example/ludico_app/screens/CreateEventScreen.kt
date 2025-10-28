@@ -30,28 +30,24 @@ import java.util.Calendar
 @Composable
 fun CreateEventScreen(
     navViewModel: NavViewModel,
-
     createEventViewModel: CreateEventViewModel = viewModel()
 ) {
-    // Obtenemos el estado de la UI desde el ViewModel. La UI se recompondrá cuando cambie.
     val uiState by createEventViewModel.uiState.collectAsState()
 
-    // Estados para los diálogos.
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
-    // Efecto para navegar hacia atrás cuando el evento se crea con éxito
     LaunchedEffect(uiState.eventCreatedSuccessfully) {
         if (uiState.eventCreatedSuccessfully) {
             navViewModel.onNavEvent(NavEvent.Back)
-            createEventViewModel.resetNavigationState() // Resetea para no volver a navegar
+            createEventViewModel.resetNavigationState()
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Crear Evento", fontWeight = FontWeight.Bold) },
+                title = { Text(if (uiState.isEditing) "Editar Evento" else "Crear Evento", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navViewModel.onNavEvent(NavEvent.Back) }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver atrás")
@@ -68,17 +64,15 @@ fun CreateEventScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Título
             FormTextField(
                 label = "Título del evento",
                 placeholder = "Ej: Torneo de Mtg",
                 value = uiState.title,
-                onValueChange = createEventViewModel::onTitleChange, // Pasamos la referencia a la función
+                onValueChange = createEventViewModel::onTitleChange,
                 isError = uiState.titleError != null,
                 errorMessage = uiState.titleError
             )
 
-            // Descripción
             FormTextField(
                 label = "Descripción",
                 placeholder = "Describe el evento, reglas, premios...",
@@ -90,7 +84,6 @@ fun CreateEventScreen(
                 minLines = 3
             )
 
-            // Tipo de Juego
             FormDropdownField(
                 label = "Tipo de juego",
                 options = listOf("Juego de mesa", "TCG", "Rol", "Videojuegos"),
@@ -98,7 +91,6 @@ fun CreateEventScreen(
                 onSelectionChange = createEventViewModel::onGameTypeChange
             )
 
-            // --- SECCIÓN DE FECHA Y HORA ---
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Box(modifier = Modifier.weight(1f)) {
                     DateField(
@@ -118,14 +110,13 @@ fun CreateEventScreen(
                 }
             }
 
-            // Ubicación
             FormTextField(
                 label = "Ubicación",
                 placeholder = "Ej: Cafe BoardGame...",
                 value = uiState.location,
                 onValueChange = createEventViewModel::onLocationChange
             )
-            // Máximo de Participantes
+
             FormDropdownField(
                 label = "Máximo de Participantes",
                 options = (2..32).map { it.toString() },
@@ -135,7 +126,6 @@ fun CreateEventScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Botones de acción
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(
                     onClick = { navViewModel.onNavEvent(NavEvent.Back) },
@@ -145,23 +135,22 @@ fun CreateEventScreen(
                 ) { Text("Cancelar") }
 
                 Button(
-                    onClick = createEventViewModel::createEvent, // Llama a la función del ViewModel
+                    onClick = createEventViewModel::saveEvent,
                     modifier = Modifier.weight(1f),
-                    enabled = !uiState.isLoading, // Deshabilitar mientras carga
+                    enabled = !uiState.isLoading,
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onSecondary)
                     } else {
-                        Text("Crear Evento")
+                        Text(if (uiState.isEditing) "Guardar Cambios" else "Crear Evento")
                     }
                 }
             }
         }
     }
 
-    // --- DIÁLOGOS ---
     if (showDatePicker) {
         val context = LocalContext.current
         val calendar = Calendar.getInstance()
@@ -176,16 +165,13 @@ fun CreateEventScreen(
         val context = LocalContext.current
         val calendar = Calendar.getInstance()
         TimePickerDialog(context, { _, hour, minute ->
-            // Llama al ViewModel para actualizar el estado
             createEventViewModel.onTimeChange(String.format("%02d:%02d", hour, minute))
-            showTimePicker = false // Corrección del error tipográfico
+            showTimePicker = false
         }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true
         ).apply { setOnDismissListener { showTimePicker = false }; show() }
     }
 }
 
-
-//  COMPOSABLES REUTILIZABLES
 
 @Composable
 private fun FormTextField(
@@ -238,7 +224,7 @@ private fun DateField(
             onValueChange = {},
             modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
             readOnly = true,
-            enabled = false, // Deshabilitado para cambiar el color y evitar el cursor
+            enabled = false,
             isError = isError,
             placeholder = { Text("DD/MM/AAAA", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             trailingIcon = { Icon(Icons.Default.DateRange, "Date Icon") },

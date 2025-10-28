@@ -8,25 +8,26 @@ data class Comment(val author: String, val text: String, val timestamp: String)
 
 // Estado completo de la pantalla de detalles
 data class EventDetailUiState(
-    val eventTitle: String = "Torneo de Magic: The Gathering",
-    val description: String = "Torneo formato Standard con premios para los primeros 3 lugares. ¡Trae tu mejor mazo y prepárate para la competencia! Se requiere puntualidad.",
-    val gameType: String = "TCG",
-    val date: String = "Miércoles, 24 septiembre",
-    val time: String = "18:00",
-    val location: String = "Reino de los duelos",
+    val id: String = "",
+    val eventTitle: String = "",
+    val description: String = "",
+    val gameType: String = "",
+    val date: String = "",
+    val time: String = "",
+    val location: String = "",
     val host: String = "Nitch",
-    val currentParticipants: Int = 11,
-    val maxParticipants: Int = 16,
-    val participants: List<Participant> = List(11) { Participant(id = "$it", name = "Jugador ${it + 1}") },
-    val comments: List<Comment> = listOf(
-        Comment("Carlos", "¡Qué buena iniciativa! Allí estaré.", "Hace 2 horas"),
-        Comment("Ana", "¿Hay que pagar inscripción?", "Hace 1 hora")
-    ),
+    val currentParticipants: Int = 0,
+    val maxParticipants: Int = 0,
+    val participants: List<Participant> = emptyList(),
+    val comments: List<Comment> = emptyList(),
 
     val isUserTheCreator: Boolean = true, // Simulación: el usuario actual es el creador
-    val rsvpState: RsvpState = RsvpState.JOINED, // Simulación: el usuario ya se unió
+    val rsvpState: RsvpState = RsvpState.NOT_JOINED,
 
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+
+    // Campo para el nuevo comentario que se está escribiendo
+    val newCommentText: String = ""
 )
 
 enum class RsvpState {

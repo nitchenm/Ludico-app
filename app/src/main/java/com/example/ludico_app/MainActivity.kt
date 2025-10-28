@@ -22,7 +22,7 @@ import androidx.navigation.navArgument
 import com.example.ludico_app.navigation.NavEvent
 import com.example.ludico_app.navigation.Routes
 import com.example.ludico_app.screens.CreateEventScreen
-import com.example.ludico_app.screens.DetailScreen
+import com.example.ludico_app.screens.EventDetailScreen
 import com.example.ludico_app.screens.HomeScreen
 import com.example.ludico_app.screens.LoginScreen
 import com.example.ludico_app.screens.RegisterScreen
@@ -30,8 +30,8 @@ import com.example.ludico_app.screens.SettingsScreen
 import com.example.ludico_app.ui.all.theme.LudicoappTheme
 import com.example.ludico_app.ui.all.utils.AdaptiveScreenFun
 import com.example.ludico_app.viewmodels.AuthViewModel
+import com.example.ludico_app.viewmodels.HomeViewModel
 import com.example.ludico_app.viewmodels.NavViewModel
-
 
 class MainActivity : ComponentActivity() {
     private val viewModelFactory by lazy {
@@ -46,6 +46,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,22 +55,21 @@ class MainActivity : ComponentActivity() {
         val authViewModel by viewModels<AuthViewModel> { viewModelFactory }
         setContent {
             LudicoappTheme {
-                //El navcontroller maneja los stacks de navegacion
                 val navController = rememberNavController()
                 val windowSizeClass = calculateWindowSizeClass(this)
                 val navViewModel: NavViewModel = viewModel()
-                //Recolecta los eventos de navegacion
+                val homeViewModel: HomeViewModel = viewModel()
+
                 val navEvent by navViewModel.navigationEvents.collectAsState(initial = null)
-                //Manejador que cada vez que navEvent cambia lo maneja como una accion
-                LaunchedEffect(navEvent){
-                    when (navEvent){
-                        is NavEvent.ToHome -> navController.navigate(Routes.Home.route){
-                            //Quita todo el stack de navEvent cuando se va a home
+
+                LaunchedEffect(navEvent) {
+                    when (val event = navEvent) {
+                        is NavEvent.ToHome -> navController.navigate(Routes.Home.route) {
                             popUpTo(navController.graph.startDestinationId)
-                            //Si ya estoy en home, no se crea otra instancia de este
                             launchSingleTop = true
                         }
-                        is NavEvent.ToDetail -> navController.navigate(Routes.Detail.createRoute((navEvent as NavEvent.ToDetail).eventId))
+                        is NavEvent.ToDetail -> navController.navigate(Routes.Detail.createRoute(event.eventId))
+                        is NavEvent.ToEditEvent -> navController.navigate(Routes.CreateEvent.createRoute(event.eventId))
                         is NavEvent.ToSettings -> navController.navigate(Routes.Settings.route)
                         is NavEvent.ToRegister -> navController.navigate(Routes.Register.route)
                         is NavEvent.Back -> navController.popBackStack()
@@ -78,15 +78,12 @@ class MainActivity : ComponentActivity() {
                             popUpTo(navController.graph.startDestinationId) { inclusive = true }
                             launchSingleTop = true
                         }
-                        is NavEvent.ToRegister -> navController.navigate(Routes.Register.route)
                         null -> Unit
                     }
                 }
-                //Container que mostrara el destino (pantalla) actual
 
                 NavHost(
                     navController = navController,
-                    // La pantalla de inicio ahora es Login.
                     startDestination = Routes.Login.route
                 ) {
                     composable(Routes.Login.route) {
@@ -103,23 +100,31 @@ class MainActivity : ComponentActivity() {
                             windowSizeClass = windowSizeClass
                         )
                     }
-                    composable(Routes.CreateEvent.route){
+                    composable(
+                        route = Routes.CreateEvent.routeWithArgs, // <-- CORREGIDO
+                        arguments = listOf(navArgument(Routes.CreateEvent.eventIdArg) { // <-- CORREGIDO
+                            type = NavType.StringType
+                            nullable = true
+                        })
+                    ) {
                         CreateEventScreen(navViewModel = navViewModel)
                     }
                     composable(Routes.Home.route) {
                         HomeScreen(
                             navViewModel = navViewModel,
+                            homeViewModel = homeViewModel,
                             windowSizeClass = windowSizeClass
                         )
                     }
                     composable(
                         route = Routes.Detail.route,
-                        arguments = listOf(navArgument("eventId"){type = NavType.StringType})
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
                     ) {
-                        DetailScreen(
-                            navViewModel = navViewModel
-
-                        ) }
+                        EventDetailScreen(
+                            navViewModel = navViewModel,
+                            windowSizeClass = windowSizeClass
+                        )
+                    }
                     composable(Routes.Settings.route) {
                         SettingsScreen(navViewModel = navViewModel)
                     }
@@ -128,8 +133,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
 
 @Preview(showBackground = true)
 @Composable
