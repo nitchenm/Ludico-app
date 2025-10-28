@@ -142,7 +142,7 @@ fun ProfileHeader(uiState: ProfileUiState, viewModel: ProfileViewModel) {
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    // Métrica de usuario
+    // UI para usuario
     Text(
         "¡Has participado en ${uiState.gamesPlayed} eventos!",
         style = MaterialTheme.typography.bodyMedium,

@@ -15,6 +15,6 @@ data class CreateEventUiState(
     val dateError: String? = null,
 
     // Estado general de la UI
-    val isLoading: Boolean = false,         // Para mostrar un spinner al enviar el formulario
-    val eventCreatedSuccessfully: Boolean = false // Para saber cuándo navegar hacia atrás
+    val isLoading: Boolean = false,
+    val eventCreatedSuccessfully: Boolean = false
 )

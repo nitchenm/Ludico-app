@@ -1,6 +1,12 @@
 package com.example.ludico_app.screens
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,41 +39,41 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.isEmpty
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.ludico_app.data.entities.Event
 import com.example.ludico_app.navigation.NavEvent
 import com.example.ludico_app.viewmodels.HomeViewModel
 import com.example.ludico_app.viewmodels.NavViewModel
+import kotlinx.coroutines.delay
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     navViewModel: NavViewModel,
-    homeViewModel: HomeViewModel, // <-- CORRECCIÓN: La pantalla ahora recibe el HomeViewModel
+    homeViewModel: HomeViewModel, 
     windowSizeClass: WindowSizeClass
 ) {
-    // Recolectamos el estado desde el ViewModel. La UI se actualizará automáticamente.
     val uiState by homeViewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Eventos de Juegos", fontWeight = FontWeight.Bold) },
+                title = { Text("Crónicas de Partidas", fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(onClick = { /* TODO: Nav to Profile */ }) {
                         Icon(Icons.Default.AccountCircle, "Perfil")
@@ -79,13 +85,13 @@ fun HomeScreen(
             FloatingActionButton(
                 onClick = { navViewModel.onNavEvent(NavEvent.ToCreateEvent) },
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.Filled.Add, "Crear Evento")
             }
         }
     ) { innerPadding ->
-        // Mostramos un indicador de carga mientras los datos se obtienen de la base de datos.
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -96,23 +102,25 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp) // Slightly less space
             ) {
                 item {
-                    // ... (Hola usuario, SearchBar, etc.)
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        SearchBar()
+                        FilterSection()
+                    }
                 }
 
-                // --- CORRECCIÓN: Mostramos la lista real de eventos ---
                 if (uiState.eventList.isEmpty()) {
                     item {
                         Text(
-                            "No hay eventos todavía. ¡Crea el primero!",
+                            "No hay partidas anunciadas. ¡Sé el primero en convocar una aventura!",
                             modifier = Modifier.padding(vertical = 24.dp)
                         )
                     }
                 } else {
-                    items(uiState.eventList) { event ->
-                        EventCard(navViewModel = navViewModel, event = event)
+                    items(uiState.eventList, key = { it.eventId }) { event ->
+                        AnimatedEventCard(event = event, navViewModel = navViewModel)
                     }
                 }
             }
@@ -120,34 +128,68 @@ fun HomeScreen(
     }
 }
 
-// --- CORRECCIÓN: EventCard ahora toma un objeto 'Event' ---
+@Composable
+private fun AnimatedEventCard(event: Event, navViewModel: NavViewModel) {
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(100)
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(durationMillis = 300)) +
+                slideInVertically(initialOffsetY = { it / 2 }, animationSpec = tween(durationMillis = 300))
+    ) {
+        EventCard(navViewModel = navViewModel, event = event)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EventCard(navViewModel: NavViewModel, event: Event) {
+private fun EventCard(
+    modifier: Modifier = Modifier,
+    navViewModel: NavViewModel, 
+    event: Event
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp), // Softer corners, like a page
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)),
         onClick = {
             Log.d("AppDebug", "HomeScreen: Clic en evento. Navegando con id: ${event.eventId}")
-            navViewModel.onNavEvent(NavEvent.ToDetail(event.eventId)) } // <-- Navegación con ID real
+            navViewModel.onNavEvent(NavEvent.ToDetail(event.eventId))
+        }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Mostramos los datos reales del objeto 'event'
-            Text(event.title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Spacer(modifier = Modifier.height(8.dp))
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                event.title, 
+                fontWeight = FontWeight.Bold, 
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary // SealingWaxRed title
+            )
             Text(
                 event.description,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyMedium,
                 maxLines = 2,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
-            // ... (Resto de los campos como fecha, hora, etc., usando event.date, event.time)
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.CalendarToday, null, tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Default.Casino, null, tint = MaterialTheme.colorScheme.primary) // Thematic die icon
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("${event.date} a las ${event.time}")
+                Text(text = event.gameType, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.CalendarToday, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "${event.date} a las ${event.time}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f))
             }
         }
     }
@@ -159,18 +201,19 @@ private fun SearchBar() {
         value = "",
         onValueChange = {},
         modifier = Modifier.fillMaxWidth(),
-        placeholder = { Text("buscar eventos") },
+        placeholder = { Text("Buscar por dungeon, campaña, juego...") },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        shape = RoundedCornerShape(50), // Completamente redondeado
+        shape = RoundedCornerShape(8.dp), 
         colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = MaterialTheme.colorScheme.surface, // #212121
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
             focusedContainerColor = MaterialTheme.colorScheme.surface,
             unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
             focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
             unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            focusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
+            cursorColor = MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -184,29 +227,24 @@ private fun FilterSection() {
         OutlinedButton(
             onClick = { /*TODO*/ },
             modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(50),
+            shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                contentColor = MaterialTheme.colorScheme.primary
             ),
-            border = ButtonDefaults.outlinedButtonBorder.copy(
-                brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.surfaceVariant)
-            )
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
         ) {
-            Text("Todos los Eventos")
+            Text("Todas las Crónicas")
         }
         OutlinedButton(
             onClick = { /*TODO*/ },
             modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(50),
+            shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                contentColor = MaterialTheme.colorScheme.primary
             ),
-            border = ButtonDefaults.outlinedButtonBorder.copy(
-                brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.surfaceVariant)
-            )
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
         ) {
-            Text("Todos los Tipos")
+            Text("Todos los Sistemas")
         }
     }
 }
-

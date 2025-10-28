@@ -2,22 +2,20 @@ package com.example.ludico_app.ui.all.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// --- Fantasy & Tabletop RPG Palette ---
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Core Colors
+val Parchment = Color(0xFFFBF5E5)      // color beige
+val Ink = Color(0xFF3A2E2E)              // cafe oscuro
+val SealingWaxRed = Color(0xFF8B0000)   // rojo color secundario
+val DarkLeather = Color(0xFF4A3F3F)      // cafe claro
 
-// Colores estándar que podemos necesitar
+// Standard & Utility Colors
 val White = Color.White
 val Black = Color.Black
-val Gray = Color.Gray
+val Gray = Color(0xFF888888)
+val LightGray = Color(0xFFD3D3D3)
 
-val LudicoGreen = Color(0xFF00FF7F)
-
-// Tus colores personalizados base // Verde brillante para acciones principales (Primary)
-val LudicoDark = Color(0xFF212121)         // Negro para fondos, texto y botones secundarios (Secondary)
-val LudicoLightGray = Color(0xFFF0F0F0)    // Gris claro para fondos de campos de texto (SurfaceVariant)
-val LudicoFacebookBlue = Color(0xFF1877F2)
+// Error Colors (can be kept standard)
+val ErrorRedDark = Color(0xFFCF6679)
+val ErrorRedLight = Color(0xFFB00020)

@@ -33,14 +33,12 @@ fun CreateEventScreen(
 
     createEventViewModel: CreateEventViewModel = viewModel()
 ) {
-    // Obtenemos el estado de la UI desde el ViewModel. La UI se recompondrá cuando cambie.
     val uiState by createEventViewModel.uiState.collectAsState()
 
     // Estados para los diálogos.
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
-    // Efecto para navegar hacia atrás cuando el evento se crea con éxito
     LaunchedEffect(uiState.eventCreatedSuccessfully) {
         if (uiState.eventCreatedSuccessfully) {
             navViewModel.onNavEvent(NavEvent.Back)
@@ -238,7 +236,7 @@ private fun DateField(
             onValueChange = {},
             modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
             readOnly = true,
-            enabled = false, // Deshabilitado para cambiar el color y evitar el cursor
+            enabled = false,
             isError = isError,
             placeholder = { Text("DD/MM/AAAA", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             trailingIcon = { Icon(Icons.Default.DateRange, "Date Icon") },

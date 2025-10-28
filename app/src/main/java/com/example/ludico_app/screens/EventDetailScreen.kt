@@ -33,10 +33,9 @@ import com.example.ludico_app.model.RsvpState
 fun EventDetailScreen(
     navViewModel: NavViewModel,
     windowSizeClass: WindowSizeClass,
-    // La pantalla ahora recibe su ViewModel, que fue creado en MainActivity.
     eventDetailViewModel: EventDetailViewModel
 ) {
-    // Recolectamos el estado desde el ViewModel. La UI se actualizará automáticamente.
+    // se obtiene el estado desde el ViewModel para que el UI se actualice automaticamente
     val uiState by eventDetailViewModel.uiState.collectAsState()
 
     val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
@@ -57,7 +56,6 @@ fun EventDetailScreen(
             )
         }
     ) { innerPadding ->
-        // Mostramos un indicador de carga mientras el evento se obtiene de la base de datos.
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -80,17 +78,15 @@ fun EventDetailScreen(
     }
 }
 
-// --- Layouts Adaptables (Modificados para usar el objeto Event) ---
+// --- Layouts Adaptables  ---
 
 @Composable
 private fun CompactDetailLayout(uiState: EventDetailUiState, modifier: Modifier = Modifier) {
     uiState.event?.let { eventFromState ->
-        // --- CORRECCIÓN CLAVE AQUÍ ---
         LazyColumn(
-            // Aplicamos el modifier del Scaffold Y ADEMÁS le decimos que llene el espacio.
             modifier = modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp), // Padding para que no se pegue a los bordes
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
@@ -166,9 +162,7 @@ private fun DetailTopAppBar(
                     Icon(Icons.Default.Edit, contentDescription = "Editar Evento")
                 }
             }
-            IconButton(onClick = { /* TODO: Lógica para compartir */ }) {
-                Icon(Icons.Default.Share, contentDescription = "Compartir")
-            }
+
             IconButton(onClick = onSharePressed) { // <-- Usar el nuevo parámetro aquí
                 Icon(Icons.Default.Share, contentDescription = "Compartir")
             }
