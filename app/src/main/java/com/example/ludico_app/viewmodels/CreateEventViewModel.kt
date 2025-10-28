@@ -1,3 +1,4 @@
+
 package com.example.ludico_app.viewmodels
 
 import android.util.Log
@@ -9,7 +10,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.ludico_app.data.entities.Event
 import com.example.ludico_app.data.repository.EventRepository
 import com.example.ludico_app.model.CreateEventUiState
-import kotlinx.coroutines.delay
+import com.example.ludico_app.model.EventDetailUiState
+import com.example.ludico_app.model.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -92,7 +94,7 @@ class CreateEventViewModel(
      * automáticamente si la pantalla se recompone.
      */
     fun resetNavigationState() {
-        _uiState.update { it.copy(eventCreatedSuccessfully = false) }
+        _uiState.update { it.copy(eventCreatedSuccessfully = false, createdEventId = null) }
     }
 
     /**

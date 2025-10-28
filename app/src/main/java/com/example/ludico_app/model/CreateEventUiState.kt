@@ -1,3 +1,4 @@
+
 package com.example.ludico_app.model
 
 data class CreateEventUiState(

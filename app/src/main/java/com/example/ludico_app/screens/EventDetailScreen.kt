@@ -138,9 +138,6 @@ private fun ExpandedDetailLayout(uiState: EventDetailUiState, modifier: Modifier
     }
 }
 
-
-// --- Componentes de la UI ---
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DetailTopAppBar(
@@ -151,11 +148,7 @@ private fun DetailTopAppBar(
 ) {
     TopAppBar(
         title = { Text("Detalles del Evento") },
-        navigationIcon = {
-            IconButton(onClick = onBackPressed) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
-            }
-        },
+        navigationIcon = { IconButton(onClick = onBackPressed) { Icon(Icons.Default.ArrowBack, "Volver") } },
         actions = {
             if (isUserTheCreator) {
                 IconButton(onClick = onEditPressed) {
@@ -166,6 +159,7 @@ private fun DetailTopAppBar(
             IconButton(onClick = onSharePressed) { // <-- Usar el nuevo parámetro aquí
                 Icon(Icons.Default.Share, contentDescription = "Compartir")
             }
+            IconButton(onClick = { /* TODO */ }) { Icon(Icons.Default.Share, "Compartir") }
         }
     )
 }
@@ -177,13 +171,7 @@ private fun RsvpFab(rsvpState: RsvpState, onClick: () -> Unit) {
         RsvpState.NOT_JOINED -> Triple("Unirse", Icons.Default.Add, MaterialTheme.colorScheme.primary)
         RsvpState.FULL -> Triple("Completo", Icons.Default.Close, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
     }
-    ExtendedFloatingActionButton(
-        text = { Text(text) },
-        icon = { Icon(icon, contentDescription = null) },
-        onClick = onClick,
-        containerColor = color,
-        contentColor = if (color == MaterialTheme.colorScheme.primary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError
-    )
+    ExtendedFloatingActionButton(text = { Text(text) }, icon = { Icon(icon, null) }, onClick = onClick, containerColor = color)
 }
 
 @Composable
@@ -208,13 +196,8 @@ fun EventDescription(event: Event) {
 
 @Composable
 fun LocationPreview(modifier: Modifier = Modifier) {
-    Card(modifier = modifier.height(200.dp), shape = RoundedCornerShape(12.dp)) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
+    Card(modifier = modifier.height(200.dp)) {
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant), Alignment.Center) {
             Text("Vista previa del mapa", style = MaterialTheme.typography.bodyMedium)
         }
     }
@@ -223,10 +206,7 @@ fun LocationPreview(modifier: Modifier = Modifier) {
 @Composable
 private fun ParticipantItem(user: User) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-        Box(modifier = Modifier
-            .size(32.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant))
+        Box(Modifier.size(32.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant))
         Spacer(Modifier.width(16.dp))
         // Usamos la propiedad 'userName' del objeto User
         Text(user.userName, style = MaterialTheme.typography.bodyLarge)
@@ -236,7 +216,7 @@ private fun ParticipantItem(user: User) {
 @Composable
 private fun CommentItem(comment: Comment) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(Modifier.padding(12.dp)) {
@@ -250,7 +230,7 @@ private fun CommentItem(comment: Comment) {
 @Composable
 fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+        Icon(icon, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.width(8.dp))
         Text(text, style = MaterialTheme.typography.bodyLarge)
     }

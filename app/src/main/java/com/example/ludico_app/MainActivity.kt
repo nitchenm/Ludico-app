@@ -30,10 +30,22 @@ import com.example.ludico_app.viewmodels.CreateEventViewModel
 import com.example.ludico_app.viewmodels.EventDetailViewModel
 import com.example.ludico_app.viewmodels.HomeViewModel
 import com.example.ludico_app.viewmodels.LudicoViewModelFactory
+import com.example.ludico_app.viewmodels.HomeViewModel
 import com.example.ludico_app.viewmodels.NavViewModel
 
-
 class MainActivity : ComponentActivity() {
+    private val viewModelFactory by lazy {
+        object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                val navViewModel by viewModels<NavViewModel>()
+                if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
+                    return AuthViewModel(navViewModel) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    }
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +63,7 @@ class MainActivity : ComponentActivity() {
                     navViewModel = navViewModel,
                     eventRepository = application.eventRepository
                 )
+                val homeViewModel: HomeViewModel = viewModel()
 
                 val navEvent by navViewModel.navigationEvents.collectAsState(initial = null)
 
@@ -61,6 +74,7 @@ class MainActivity : ComponentActivity() {
                             launchSingleTop = true
                         }
                         is NavEvent.ToDetail -> navController.navigate(Routes.Detail.createRoute(event.eventId))
+                        is NavEvent.ToEditEvent -> navController.navigate(Routes.CreateEvent.createRoute(event.eventId))
                         is NavEvent.ToSettings -> navController.navigate(Routes.Settings.route)
                         is NavEvent.Back -> navController.popBackStack()
                         is NavEvent.ToCreateEvent -> navController.navigate(Routes.CreateEvent.route)
@@ -98,6 +112,14 @@ class MainActivity : ComponentActivity() {
                             navViewModel = navViewModel,
                             createEventViewModel = createEventViewModel
                         )
+                    composable(
+                        route = Routes.CreateEvent.routeWithArgs, // <-- CORREGIDO
+                        arguments = listOf(navArgument(Routes.CreateEvent.eventIdArg) { // <-- CORREGIDO
+                            type = NavType.StringType
+                            nullable = true
+                        })
+                    ) {
+                        CreateEventScreen(navViewModel = navViewModel)
                     }
 
                     composable(Routes.Home.route) {
@@ -119,6 +141,13 @@ class MainActivity : ComponentActivity() {
                             eventDetailViewModel = eventDetailViewModel,
                             windowSizeClass = windowSizeClass
                         )
+                        EventDetailScreen(
+                            navViewModel = navViewModel,
+                            windowSizeClass = windowSizeClass
+                        )
+                    }
+                    composable(Routes.Settings.route) {
+                        SettingsScreen(navViewModel = navViewModel)
                     }
 
                     composable(Routes.Profile.route) { /* ... */ }
@@ -128,8 +157,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
 
 @Preview(showBackground = true)
 @Composable

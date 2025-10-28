@@ -31,6 +31,35 @@ class EventDetailViewModel(
 
     init {
         Log.d("AppDebug", "EventDetailVM: viewmodel iniciado. Intentando buscar con id : $eventId")
+    private val eventId: String = savedStateHandle.get<String>("eventId")!!
+
+    private val _newCommentText = MutableStateFlow("")
+
+    val uiState: StateFlow<EventDetailUiState> = combine(
+        EventRepository.events.map { it[eventId] ?: EventDetailUiState() },
+        _newCommentText
+    ) { event, newComment ->
+        event.copy(newCommentText = newComment)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = EventDetailUiState()
+    )
+
+    fun onNewCommentChange(text: String) {
+        _newCommentText.value = text
+    }
+
+    fun submitComment() {
+        if (_newCommentText.value.isNotBlank()) {
+            EventRepository.addComment(
+                eventId = eventId,
+                author = "Usuario Actual", // TODO: Reemplazar con el nombre del usuario real
+                text = _newCommentText.value
+            )
+            // Limpiar el campo después de enviar
+            _newCommentText.value = ""
+        }
     }
     val uiState: StateFlow<EventDetailUiState> =
         if (eventId != null) {
@@ -118,5 +147,10 @@ class EventDetailViewModel(
                 ) as T
             }
         }
+        val currentEvent = uiState.value
+        val newRsvpState = if (currentEvent.rsvpState == RsvpState.JOINED) RsvpState.NOT_JOINED else RsvpState.JOINED
+
+        val updatedEvent = currentEvent.copy(rsvpState = newRsvpState)
+        EventRepository.updateEvent(updatedEvent)
     }
 }

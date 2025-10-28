@@ -10,6 +10,7 @@ sealed interface NavEvent {
     data object Back : NavEvent
 
     data object ToCreateEvent: NavEvent
+    data class ToEditEvent(val eventId: String) : NavEvent
 
     data object ToProfile : NavEvent
 
