@@ -17,9 +17,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ludico_app.data.entities.Event
+import com.example.ludico_app.data.entities.User
 import com.example.ludico_app.model.Comment
 import com.example.ludico_app.navigation.NavEvent
 import com.example.ludico_app.viewmodels.NavViewModel
@@ -31,17 +33,20 @@ import com.example.ludico_app.model.RsvpState
 fun EventDetailScreen(
     navViewModel: NavViewModel,
     windowSizeClass: WindowSizeClass,
-    eventDetailViewModel: EventDetailViewModel = viewModel()
+    eventDetailViewModel: EventDetailViewModel
 ) {
+    // se obtiene el estado desde el ViewModel para que el UI se actualice automaticamente
     val uiState by eventDetailViewModel.uiState.collectAsState()
-    val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
 
+    val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             DetailTopAppBar(
                 isUserTheCreator = uiState.isUserTheCreator,
                 onBackPressed = { navViewModel.onNavEvent(NavEvent.Back) },
-                onEditPressed = { navViewModel.onNavEvent(NavEvent.ToEditEvent(uiState.id)) }
+                onEditPressed = { /* TODO: Navegar a pantalla de edición */ } ,
+                onSharePressed = { eventDetailViewModel.shareEvent(context) }
             )
         },
         floatingActionButton = {
@@ -51,96 +56,108 @@ fun EventDetailScreen(
             )
         }
     ) { innerPadding ->
-        if (isExpanded) {
-            ExpandedDetailLayout(
-                uiState = uiState,
-                onCommentChange = eventDetailViewModel::onNewCommentChange,
-                onCommentSubmit = eventDetailViewModel::submitComment,
-                modifier = Modifier.padding(innerPadding)
-            )
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (uiState.event != null) {
+            // Una vez cargado el evento, mostramos el layout correspondiente.
+            if (isExpanded) {
+                ExpandedDetailLayout(uiState = uiState, modifier = Modifier.padding(innerPadding))
+            } else {
+                CompactDetailLayout(uiState = uiState, modifier = Modifier.padding(innerPadding))
+            }
         } else {
-            CompactDetailLayout(
-                uiState = uiState,
-                onCommentChange = eventDetailViewModel::onNewCommentChange,
-                onCommentSubmit = eventDetailViewModel::submitComment,
-                modifier = Modifier.padding(innerPadding)
-            )
+            // Manejo del caso en que el evento no se encuentra.
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding), contentAlignment = Alignment.Center) {
+                Text("Evento no encontrado.")
+            }
         }
     }
 }
 
-@Composable
-private fun CompactDetailLayout(
-    uiState: EventDetailUiState,
-    onCommentChange: (String) -> Unit,
-    onCommentSubmit: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize().padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item { EventHeader(uiState) }
-        item { EventDescription(uiState) }
-        item { LocationPreview() }
-        item { SectionTitle("Participantes (${uiState.currentParticipants}/${uiState.maxParticipants})") }
-        items(uiState.participants) { participant -> ParticipantItem(name = participant.name) }
-        item { 
-            CommentSection(
-                comments = uiState.comments,
-                newCommentText = uiState.newCommentText,
-                onCommentChange = onCommentChange,
-                onCommentSubmit = onCommentSubmit
-            ) 
-        }
-        item { Spacer(Modifier.height(80.dp)) }
-    }
-}
+// --- Layouts Adaptables  ---
 
 @Composable
-private fun ExpandedDetailLayout(
-    uiState: EventDetailUiState,
-    onCommentChange: (String) -> Unit,
-    onCommentSubmit: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(modifier = modifier.fillMaxSize()) {
+private fun CompactDetailLayout(uiState: EventDetailUiState, modifier: Modifier = Modifier) {
+    uiState.event?.let { eventFromState ->
         LazyColumn(
-            modifier = Modifier.weight(0.6f).padding(horizontal = 24.dp),
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { EventHeader(uiState) }
-            item { EventDescription(uiState) }
-            item { SectionTitle("Participantes (${uiState.currentParticipants}/${uiState.maxParticipants})") }
-            items(uiState.participants) { participant -> ParticipantItem(name = participant.name) }
-            item { 
-                CommentSection(
-                    comments = uiState.comments,
-                    newCommentText = uiState.newCommentText,
-                    onCommentChange = onCommentChange,
-                    onCommentSubmit = onCommentSubmit
-                ) 
+            item {
+                EventHeader(event = eventFromState, hostName = uiState.host?.userName ?: "Desconocido")
+                Spacer(Modifier.height(16.dp))
+                EventDescription(event = eventFromState)
+                Spacer(Modifier.height(16.dp))
+                LocationPreview()
             }
+            item { SectionTitle("Participantes (${uiState.participants.size}/${eventFromState.maxParticipants})") }
+            items(uiState.participants) { participant ->
+                ParticipantItem(user = participant)
+            }
+            item { SectionTitle("Comentarios (${uiState.comments.size})") }
+            items(uiState.comments) { comment ->
+                CommentItem(comment = comment)
+            }
+            // Espacio final para que el FAB no tape el último elemento
             item { Spacer(Modifier.height(80.dp)) }
         }
-        Box(
-            modifier = Modifier.weight(0.4f).fillMaxHeight().padding(end = 24.dp, top = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            LocationPreview(modifier = Modifier.fillMaxSize())
+    }
+}
+
+@Composable
+private fun ExpandedDetailLayout(uiState: EventDetailUiState, modifier: Modifier = Modifier) {
+    uiState.event?.let { event ->
+        Row(modifier = modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(0.6f)
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item { EventHeader(event = event, hostName = uiState.host?.userName ?: "Desconocido") }
+                item { EventDescription(event = event) }
+                item { SectionTitle("Participantes (?/${event.maxParticipants})") }
+                // El resto del contenido...
+            }
+            Box(
+                modifier = Modifier
+                    .weight(0.4f)
+                    .fillMaxHeight()
+                    .padding(end = 24.dp, top = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                LocationPreview(modifier = Modifier.fillMaxSize())
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DetailTopAppBar(isUserTheCreator: Boolean, onBackPressed: () -> Unit, onEditPressed: () -> Unit) {
+private fun DetailTopAppBar(
+    isUserTheCreator: Boolean,
+    onBackPressed: () -> Unit,
+    onEditPressed: () -> Unit,
+    onSharePressed: () -> Unit
+) {
     TopAppBar(
         title = { Text("Detalles del Evento") },
         navigationIcon = { IconButton(onClick = onBackPressed) { Icon(Icons.Default.ArrowBack, "Volver") } },
         actions = {
             if (isUserTheCreator) {
-                IconButton(onClick = onEditPressed) { Icon(Icons.Default.Edit, "Editar") }
+                IconButton(onClick = onEditPressed) {
+                    Icon(Icons.Default.Edit, contentDescription = "Editar Evento")
+                }
+            }
+
+            IconButton(onClick = onSharePressed) { // <-- Usar el nuevo parámetro aquí
+                Icon(Icons.Default.Share, contentDescription = "Compartir")
             }
             IconButton(onClick = { /* TODO */ }) { Icon(Icons.Default.Share, "Compartir") }
         }
@@ -158,22 +175,22 @@ private fun RsvpFab(rsvpState: RsvpState, onClick: () -> Unit) {
 }
 
 @Composable
-fun EventHeader(uiState: EventDetailUiState) {
+fun EventHeader(event: Event, hostName: String) {
     Column {
-        Text(uiState.eventTitle, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(event.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
-        InfoRow(icon = Icons.Default.CalendarToday, text = "${uiState.date} a las ${uiState.time}")
-        InfoRow(icon = Icons.Default.LocationOn, text = uiState.location)
-        InfoRow(icon = Icons.Default.VideogameAsset, text = "Juego: ${uiState.gameType}")
-        InfoRow(icon = Icons.Default.Person, text = "Organizador: ${uiState.host}")
+        InfoRow(icon = Icons.Default.CalendarToday, text = "${event.date} a las ${event.time}")
+        InfoRow(icon = Icons.Default.LocationOn, text = event.location)
+        InfoRow(icon = Icons.Default.VideogameAsset, text = "Juego: ${event.gameType}")
+        InfoRow(icon = Icons.Default.Person, text = "Organizador: $hostName")
     }
 }
 
 @Composable
-fun EventDescription(uiState: EventDetailUiState) {
+fun EventDescription(event: Event) {
     Column {
         SectionTitle("Descripción")
-        Text(uiState.description, style = MaterialTheme.typography.bodyLarge)
+        Text(event.description, style = MaterialTheme.typography.bodyLarge)
     }
 }
 
@@ -187,61 +204,25 @@ fun LocationPreview(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ParticipantItem(name: String) {
+private fun ParticipantItem(user: User) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
         Box(Modifier.size(32.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant))
         Spacer(Modifier.width(16.dp))
-        Text(name, style = MaterialTheme.typography.bodyLarge)
+        // Usamos la propiedad 'userName' del objeto User
+        Text(user.userName, style = MaterialTheme.typography.bodyLarge)
     }
 }
 
 @Composable
-private fun CommentSection(
-    comments: List<Comment>,
-    newCommentText: String,
-    onCommentChange: (String) -> Unit,
-    onCommentSubmit: () -> Unit
-) {
-    Column {
-        SectionTitle("Comentarios")
-        if (comments.isEmpty()) {
-            Text(
-                text = "Aún no hay comentarios. ¡Sé el primero en comentar!",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
-        } else {
-            comments.forEach { comment ->
-                CommentItem(author = comment.author, text = comment.text, timestamp = comment.timestamp)
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = newCommentText,
-            onValueChange = onCommentChange,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Escribe un comentario...") },
-            trailingIcon = {
-                IconButton(onClick = onCommentSubmit, enabled = newCommentText.isNotBlank()) {
-                    Icon(Icons.Default.Send, contentDescription = "Enviar comentario")
-                }
-            }
-        )
-    }
-}
-
-@Composable
-private fun CommentItem(author: String, text: String, timestamp: String) {
+private fun CommentItem(comment: Comment) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(Modifier.padding(12.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(author, fontWeight = FontWeight.Bold)
-                Text(timestamp, style = MaterialTheme.typography.bodySmall)
-            }
-            Text(text)
+            // TODO: Necesitarías obtener el nombre del autor usando comment.authorUserId
+            Text(comment.author, fontWeight = FontWeight.Bold)
+            Text(comment.text)
         }
     }
 }

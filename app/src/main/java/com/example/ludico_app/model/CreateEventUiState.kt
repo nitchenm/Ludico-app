@@ -17,7 +17,5 @@ data class CreateEventUiState(
 
     // Estado general de la UI
     val isLoading: Boolean = false,
-    val eventCreatedSuccessfully: Boolean = false,
-    val createdEventId: String? = null,
-    val isEditing: Boolean = false
+    val eventCreatedSuccessfully: Boolean = false
 )

@@ -9,9 +9,7 @@ sealed class Routes (val route: String) {
     data object Login : Routes ("login")
     data object Register: Routes ("register")
 
-    object CreateEvent: Routes ("create_event") {
-        const val routeWithArgs = "create_event?eventId={eventId}"
-        const val eventIdArg = "eventId"
-        fun createRoute(eventId: String) = "create_event?eventId=$eventId"
-    }
+    data object CreateEvent: Routes ("create_event")
+
+    data object Profile : Routes("profile")
 }
