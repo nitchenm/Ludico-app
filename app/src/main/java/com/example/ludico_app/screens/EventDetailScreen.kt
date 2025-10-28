@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.ludico_app.data.entities.Event
@@ -39,13 +40,14 @@ fun EventDetailScreen(
     val uiState by eventDetailViewModel.uiState.collectAsState()
 
     val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
-
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             DetailTopAppBar(
                 isUserTheCreator = uiState.isUserTheCreator,
                 onBackPressed = { navViewModel.onNavEvent(NavEvent.Back) },
-                onEditPressed = { /* TODO: Navegar a pantalla de edición */ }
+                onEditPressed = { /* TODO: Navegar a pantalla de edición */ } ,
+                onSharePressed = { eventDetailViewModel.shareEvent(context) }
             )
         },
         floatingActionButton = {
@@ -145,7 +147,12 @@ private fun ExpandedDetailLayout(uiState: EventDetailUiState, modifier: Modifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DetailTopAppBar(isUserTheCreator: Boolean, onBackPressed: () -> Unit, onEditPressed: () -> Unit) {
+private fun DetailTopAppBar(
+    isUserTheCreator: Boolean,
+    onBackPressed: () -> Unit,
+    onEditPressed: () -> Unit,
+    onSharePressed: () -> Unit
+) {
     TopAppBar(
         title = { Text("Detalles del Evento") },
         navigationIcon = {
@@ -160,6 +167,9 @@ private fun DetailTopAppBar(isUserTheCreator: Boolean, onBackPressed: () -> Unit
                 }
             }
             IconButton(onClick = { /* TODO: Lógica para compartir */ }) {
+                Icon(Icons.Default.Share, contentDescription = "Compartir")
+            }
+            IconButton(onClick = onSharePressed) { // <-- Usar el nuevo parámetro aquí
                 Icon(Icons.Default.Share, contentDescription = "Compartir")
             }
         }

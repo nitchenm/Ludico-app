@@ -1,5 +1,7 @@
 package com.example.ludico_app.viewmodels
 
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -61,6 +63,43 @@ class EventDetailViewModel(
     fun toggleRsvp() {
         // TODO: Implementar la lógica para unirse/abandonar un evento.
         // Esto implicaría añadir/quitar una fila en una tabla de relación "UserEventCrossRef".
+    }
+
+    fun shareEvent(context: Context) {
+        // Obtenemos el evento actual del estado de la UI
+        val event = uiState.value.event
+        if (event == null) {
+            Log.w("AppDebug", "ShareEvent: No se puede compartir porque el evento es nulo.")
+            return
+        }
+
+        // 1. Construimos el mensaje que queremos compartir.
+        val shareText = """
+            ¡Te invito a un evento de juegos!
+            
+            Título: ${event.title}
+            Juego: ${event.gameType}
+            Cuándo: ${event.date} a las ${event.time}
+            Dónde: ${event.location}
+            
+            Descripción: ${event.description}
+            
+            ¡Descarga Ludico para más detalles!
+        """.trimIndent()
+
+        // 2. Creamos un Intent de tipo ACTION_SEND.
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain" // Indicamos que estamos enviando texto plano.
+        }
+
+        // 3. Creamos un "chooser" para que el usuario elija la app con la que quiere compartir.
+        val shareIntent = Intent.createChooser(sendIntent, "Compartir evento vía...")
+
+        // 4. Lanzamos el Intent desde el contexto.
+        // Es importante añadir FLAG_ACTIVITY_NEW_TASK cuando se lanza un Intent desde fuera de una Activity.
+        context.startActivity(shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
     companion object {
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
