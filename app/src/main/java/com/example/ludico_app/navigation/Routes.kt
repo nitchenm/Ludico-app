@@ -10,4 +10,6 @@ sealed class Routes (val route: String) {
     data object Register: Routes ("register")
 
     data object CreateEvent: Routes ("create_event")
+
+    data object Profile : Routes("profile")
 }

@@ -11,5 +11,7 @@ sealed interface NavEvent {
 
     data object ToCreateEvent: NavEvent
 
+    data object ToProfile : NavEvent
+
 
 }

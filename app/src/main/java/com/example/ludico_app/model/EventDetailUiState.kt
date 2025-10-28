@@ -1,5 +1,8 @@
 package com.example.ludico_app.model
 
+import com.example.ludico_app.data.entities.Event
+import com.example.ludico_app.data.entities.User
+
 // Modelo de datos simple para un participante
 data class Participant(val id: String, val name: String, val avatarUrl: String? = null)
 
@@ -8,25 +11,28 @@ data class Comment(val author: String, val text: String, val timestamp: String)
 
 // Estado completo de la pantalla de detalles
 data class EventDetailUiState(
-    val eventTitle: String = "Torneo de Magic: The Gathering",
-    val description: String = "Torneo formato Standard con premios para los primeros 3 lugares. ¡Trae tu mejor mazo y prepárate para la competencia! Se requiere puntualidad.",
-    val gameType: String = "TCG",
-    val date: String = "Miércoles, 24 septiembre",
-    val time: String = "18:00",
-    val location: String = "Reino de los duelos",
-    val host: String = "Nitch",
-    val currentParticipants: Int = 11,
-    val maxParticipants: Int = 16,
-    val participants: List<Participant> = List(11) { Participant(id = "$it", name = "Jugador ${it + 1}") },
-    val comments: List<Comment> = listOf(
-        Comment("Carlos", "¡Qué buena iniciativa! Allí estaré.", "Hace 2 horas"),
-        Comment("Ana", "¿Hay que pagar inscripción?", "Hace 1 hora")
-    ),
+    // El objeto Event completo que viene de la base de datos. Puede ser nulo mientras carga.
+    val event: Event? = null,
 
-    val isUserTheCreator: Boolean = true, // Simulación: el usuario actual es el creador
-    val rsvpState: RsvpState = RsvpState.JOINED, // Simulación: el usuario ya se unió
+    // El usuario que creó el evento.
+    val host: User? = null,
 
-    val isLoading: Boolean = false
+    // Lista de usuarios que se han unido al evento.
+    // La llamaremos 'participants' para que coincida con lo que la pantalla espera.
+    // Por ahora será una lista de User, podrías crear un modelo más simple si lo necesitas.
+    val participants: List<User> = emptyList(),
+
+    // Lista de comentarios del evento.
+    val comments: List<Comment> = emptyList(),
+
+    // Estado que indica si el usuario logueado es el creador.
+    val isUserTheCreator: Boolean = false,
+
+    // Estado que indica si el usuario ya se ha unido.
+    val rsvpState: RsvpState = RsvpState.NOT_JOINED,
+
+    // Estado para mostrar un indicador de carga.
+    val isLoading: Boolean = true
 )
 
 enum class RsvpState {

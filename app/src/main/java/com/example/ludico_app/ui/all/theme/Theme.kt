@@ -19,21 +19,15 @@ import androidx.core.view.WindowCompat
 private val DarkColorScheme = darkColorScheme(
     primary = LudicoGreen,                  // Verde para acciones principales (FAB)
     onPrimary = Black,                      // Texto/icono negro sobre el verde
-
-    background = Color(0xFF121212),         // Fondo general casi negro, estándar de Material Design
+    background = Color(0xFF121212),  // Fondo general casi negro, estándar de Material Design
     onBackground = White,                   // Texto blanco sobre el fondo
-
     surface = LudicoDark,                   // Superficies como tarjetas y TopAppBar (tu color #212121)
     onSurface = White,                      // Texto blanco sobre estas superficies
-
-    surfaceVariant = Color(0xFF424242),     // Un gris más claro para elementos como botones de filtro
+    surfaceVariant = Color(0xFF424242), // Un gris más claro para elementos como botones de filtro
     onSurfaceVariant = White,               // Texto blanco sobre estos elementos
-
     secondary = LudicoGreen,                // Usamos el verde también como secundario
     onSecondary = Black                     // Texto negro sobre verde
 )
-
-
 private val LightColorScheme = lightColorScheme(
     primary = LudicoGreen,                 // Botones principales, FABs
     onPrimary = Black,                     // Texto sobre botones verdes (Negro es más legible)
