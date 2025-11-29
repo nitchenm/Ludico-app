@@ -36,21 +36,9 @@ http://localhost:8080/auth/login?email=test@ludico.com&password=Test123456
 // Events
 http://localhost:8080/api/v1/events
 
-
-B. Microservicio Propio
-Nombre del Servicio: [Nombre del Microservicio, e.g., ProductCatalogService]
+Nombre del Servicio: Ludico-app-backend
 
 Propósito: Gestionar la lógica de negocio y proveer datos específicos de la aplicación.
-
-URL Base: \https://www.youtube.com/watch?v=x6cTpJozRd0:\[PUERTO]/api/v1]
-
-Endpoint(s) Utilizados:
-
-GET /products: Para obtener el listado completo de productos.
-
-POST /users/register: Para el registro de nuevos usuarios.
-
-PUT /products/{id}: Para actualizar un producto específico.
 
 🛠️ 5. Pasos para Ejecutar
 Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno local:
@@ -69,25 +57,13 @@ git clone https://github.com/nitchenm/Ludico-app
 cd Ludico-app
 Abrir en Android Studio
 
-Configurar Variables de Entorno (si aplica): Asegúrate de que la URL base del microservicio y las claves de la API externa estén correctamente configuradas en el archivo local.properties o donde corresponda.
+Configurar Variables de Entorno : Asegúrate de que la URL base del microservicio este correctamente configuradas en el archivo local.properties o donde corresponda.
 
 Sincronizar Proyecto: Espera a que Gradle sincronice todas las dependencias.
 
-Ejecutar: Selecciona un emulador propio de android studio o conecta un dispositivo físico y presiona el botón Run (▶️).
+Ejecutar: Selecciona un emulador propio de android studio o conecta un dispositivo físico y presiona el botón Run 
 
 🔒 6. Archivos de Firma
-Los archivos necesarios para la distribución y el firmado del proyecto se encuentran adjuntos o referenciados aquí.
 
-A. APK Firmado
-Nombre del Archivo: app-release.apk
 
-Ubicación: [ruta/al/archivo/app-release.apk]
 
-B. Keystore (Archivo .jks)
-Nombre del Archivo: [nombre_del_keystore].jks
-
-Ubicación: [ruta/al/archivo/nombre_del_keystore.jks]
-
-Alias de la clave: [Alias utilizado para firmar]
-
-Contraseña del almacén: \[SOLO SI ES NECESARIO COMPARTIR, DE LO CONTRARIO, INDICAR CÓMO OBTENERLA]
