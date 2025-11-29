@@ -40,6 +40,8 @@ Nombre del Servicio: Ludico-app-backend
 
 Propósito: Gestionar la lógica de negocio y proveer datos específicos de la aplicación.
 
+*Podras encontrar nuestro backend en el repositorio https://github.com/nitchenm/Ludico-app-backend donde tambien se mostraran las instrucciones*
+
 🛠️ 5. Pasos para Ejecutar
 Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno local:
 
