@@ -40,6 +40,8 @@ Nombre del Servicio: Ludico-app-backend
 
 Propósito: Gestionar la lógica de negocio y proveer datos específicos de la aplicación.
 
+*Podras encontrar nuestro backend en el repositorio https://github.com/nitchenm/Ludico-app-backend donde tambien se mostraran las instrucciones*
+
 🛠️ 5. Pasos para Ejecutar
 Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno local:
 
@@ -62,6 +64,13 @@ Sincronizar Proyecto: Espera a que Gradle sincronice todas las dependencias.
 Ejecutar: Selecciona un emulador propio de android studio o conecta un dispositivo físico y presiona el botón Run 
 
 🔒 6. Archivos de Firma
+
+<img width="504" height="616" alt="firmapt1" src="https://github.com/user-attachments/assets/efd99acb-eefe-4a91-9cf2-3dfcabc4b177" />
+
+<img width="885" height="404" alt="firma_guardada" src="https://github.com/user-attachments/assets/8231e5f0-320e-42e0-bcd2-e156cfb6f43f" />
+
+   
+
 
 
 
