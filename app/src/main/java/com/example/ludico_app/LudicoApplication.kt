@@ -30,13 +30,11 @@ class LudicoApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // 2. Manually initialize WorkManager
         val workManagerConfig = Configuration.Builder()
             .setWorkerFactory(SyncWorkerFactory(eventRepository))
             .build()
         WorkManager.initialize(this, workManagerConfig)
 
-        // Now schedule the work
         setupRecurringWork()
     }
 
@@ -53,6 +51,4 @@ class LudicoApplication : Application() {
 
         WorkManager.getInstance(applicationContext).enqueue(repeatingRequest)
     }
-
-    // 3. The getWorkManagerConfiguration() method is no longer needed.
 }
