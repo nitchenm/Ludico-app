@@ -6,7 +6,8 @@ import java.util.UUID
 
 /**
  * Representa la tabla 'events' en la base de datos.
- */@Entity(tableName = "events")
+ */
+@Entity(tableName = "events")
 data class Event(
     // Clave primaria que se autogenera con un ID único universal.
     @PrimaryKey val eventId: String = UUID.randomUUID().toString(),
@@ -20,5 +21,6 @@ data class Event(
     val maxParticipants: Int,
 
     // Clave foránea (Foreign Key) que relaciona este evento con el usuario que lo creó.
-    val hostUserId: String
+    val hostUserId: String,
+    val isSynced: Boolean = false
 )

@@ -1,27 +1,48 @@
 package com.example.ludico_app
 
 import android.app.Application
-import com.example.ludico_app.data.repository.EventRepository
+import androidx.work.Configuration
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.ludico_app.data.db.dao.LudicoDatabase
+import com.example.ludico_app.data.remote.RetrofitInstance
+import com.example.ludico_app.data.repository.EventRepository
+import com.example.ludico_app.workers.SyncWorker
+import java.util.concurrent.TimeUnit
 
-/**
- * Clase principal de la aplicación. Se inicializa una sola vez cuando la app se lanza.
- * Es el lugar ideal para crear instancias de objetos que deben ser compartidos
- * por toda la aplicación, como la base de datos y los repositorios.
- */
-class LudicoApplication : Application() {
+class LudicoApplication : Application(), Configuration.Provider {
 
-    // Usamos 'lazy' para que la base de datos y el repositorio se creen solo cuando se necesiten por primera vez.
-    // Esto mejora el rendimiento de arranque de la aplicación.
-
-    /**
-     * Instancia única de la base de datos para toda la aplicación.
-     */
     val database: LudicoDatabase by lazy { LudicoDatabase.getDatabase(this) }
 
-    /**
-     * Instancia única del repositorio de eventos.
-     * Le pasamos el DAO de la base de datos que necesita para funcionar.
-     */
-    val eventRepository: EventRepository by lazy { EventRepository(database.eventDao(), database.userDao()) }
+    val eventRepository: EventRepository by lazy {
+        EventRepository(database.eventDao(), database.userDao(), RetrofitInstance.api)
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        setupRecurringWork()
+    }
+
+    private fun setupRecurringWork() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val repeatingRequest = PeriodicWorkRequestBuilder<SyncWorker>(
+            1, TimeUnit.HOURS
+        )
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(applicationContext).enqueue(
+            repeatingRequest
+        )
+    }
+
+    override val workManagerConfiguration:
+        get() = Configuration.Builder()
+            .setMinimumLoggingLevel(android.util.Log.INFO)
+            .build()
 }

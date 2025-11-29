@@ -1,3 +1,4 @@
+
 package com.example.ludico_app.data.remote
 
 import retrofit2.Retrofit
@@ -5,13 +6,13 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
 
-    // Aca va se realiza la instancia para el servicio de la API una sola vez
+    private const val BASE_URL = "http://10.0.2.2:8080/"
+
     val api: ApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl("https://jsonplaceholder.typicode.com")
+        val retrofit = Retrofit.Builder()
+            .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(ApiService::class.java)
-
+        retrofit.create(ApiService::class.java)
     }
 }
