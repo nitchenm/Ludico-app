@@ -29,6 +29,7 @@ Propósito: Obtener datos de [describir qué datos se obtienen].
 Endpoint(s) Ejemplo:
 
 POST
+
 // Login
 http://localhost:8080/auth/login?email=test@ludico.com&password=Test123456
 
