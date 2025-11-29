@@ -4,9 +4,10 @@ Ludico es tu aplicacion para organizar tus juegos de mesas favoritos , desde par
 Ludico es para todos.
 
 👥  Integrantes
-[Sebastian Mondaca] 
 
-[Nitchen Martinez] 
+Sebastian Mondaca
+
+Nitchen Martinez 
 
 
 ✨  Funcionalidades
