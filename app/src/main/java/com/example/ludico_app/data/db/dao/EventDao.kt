@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.ludico_app.data.entities.Event
 import com.example.ludico_app.data.entities.User
 import kotlinx.coroutines.flow.Flow
@@ -43,4 +44,10 @@ interface EventDao {
 
     @Query("SELECT * FROM users WHERE userId = :userId")
     fun getUserById(userId: String): Flow<User?> // Usamos Flow para que se actualice si el usuario cambia
+
+    @Update
+    suspend fun updateEvent(event: Event)
+
+    @Query("SELECT * FROM events WHERE isSynced = 0")
+    suspend fun getUnsyncedEvents(): List<Event>
 }

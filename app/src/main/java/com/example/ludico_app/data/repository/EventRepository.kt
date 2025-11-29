@@ -2,38 +2,48 @@ package com.example.ludico_app.data.repository
 
 import com.example.ludico_app.data.db.dao.EventDao
 import com.example.ludico_app.data.db.dao.UserDao
+import com.example.ludico_app.data.dto.toEventDto
 import com.example.ludico_app.data.entities.Event
 import com.example.ludico_app.data.entities.User
+import com.example.ludico_app.data.remote.ApiService
 import kotlinx.coroutines.flow.Flow
+import java.io.IOException
 
-/**
- * El Repositorio actúa como una capa de abstracción entre los ViewModels y las fuentes de datos.
- * Su trabajo es obtener los datos (desde la base de datos o una red) y proveerlos de forma limpia.
- */
-class EventRepository(private val eventDao: EventDao, private val userDao: UserDao) {
+class EventRepository(private val eventDao: EventDao, private val userDao: UserDao, private val apiService: ApiService) {
 
-    /**
-     * Expone un Flow con la lista de todos los eventos.
-     * El ViewModel se suscribirá a este Flow para obtener actualizaciones en tiempo real.
-     */
     val allEvents: Flow<List<Event>> = eventDao.getAllEvents()
 
-    /**
-     * Obtiene un solo evento por su ID.
-     */
     fun getEvent(eventId: String?): Flow<Event?> {
         return eventDao.getEvent(eventId)
     }
 
-    /**
-     * Inserta un evento en la base de datos a través de una corrutina.
-     * Esta es una función 'suspend' porque las operaciones de escritura en disco deben ser asíncronas.
-     */
     suspend fun insert(event: Event) {
         eventDao.insertEvent(event)
+        try {
+            val response = apiService.createEvent(event.toEventDto())
+            if (response.isSuccessful) {
+                eventDao.updateEvent(event.copy(isSynced = true))
+            }
+        } catch (e: IOException) {
+            // The error will be handled by the sync worker
+        }
     }
 
     fun getUser(userId: String): Flow<User?> {
         return userDao.getUserById(userId)
+    }
+
+    suspend fun syncEvents() {
+        val unsyncedEvents = eventDao.getUnsyncedEvents()
+        for (event in unsyncedEvents) {
+            try {
+                val response = apiService.createEvent(event.toEventDto())
+                if (response.isSuccessful) {
+                    eventDao.updateEvent(event.copy(isSynced = true))
+                }
+            } catch (e: IOException) {
+                // Continue to the next event
+            }
+        }
     }
 }
