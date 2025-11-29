@@ -1,4 +1,4 @@
-[LUDICO-APP]
+*LUDICO-APP*
 
 Ludico es tu aplicacion para organizar tus juegos de mesas favoritos , desde partidas casuales hasta torneos competitivos de tcg del mas alto nivel
 Ludico es para todos.
