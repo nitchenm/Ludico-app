@@ -31,6 +31,7 @@ Endpoint(s) Ejemplo:
 POST
 // Login
 http://localhost:8080/auth/login?email=test@ludico.com&password=Test123456
+
 // Events
 http://localhost:8080/api/v1/events
 
