@@ -2,9 +2,9 @@ package com.example.ludico_app.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.ludico_app.data.repository.UserRepository
 import com.example.ludico_app.model.AuthUiState
 import com.example.ludico_app.navigation.NavEvent
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -12,90 +12,102 @@ import kotlinx.coroutines.launch
 import java.util.regex.Pattern
 
 class AuthViewModel(
-    private val navViewModel: NavViewModel
-) : ViewModel(){
-    //Estado privado para que solo el viewmodel pueda modificar
+    private val navViewModel: NavViewModel,
+    private val userRepository: UserRepository
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(AuthUiState())
-    //version publica y de lectura
     val uiState = _uiState.asStateFlow()
 
-    fun onEmailChange(email:String){
+    fun onEmailChange(email: String) {
         _uiState.update { it.copy(email = email, emailError = null, generalError = null) }
     }
 
-    fun onPasswordChange(password:String){
-        _uiState.update { it.copy(password = password, confirmPasswordError = null, generalError = null) }
+    fun onPasswordChange(password: String) {
+        _uiState.update { it.copy(password = password, passwordError = null, generalError = null) }
     }
-    fun onConfirmPasswordChange(confirmPassword:String){
+
+    fun onConfirmPasswordChange(confirmPassword: String) {
         _uiState.update { it.copy(confirmPassword = confirmPassword, confirmPasswordError = null, generalError = null) }
     }
 
-
-    fun login(){
+    fun login() {
         viewModelScope.launch {
-            if (!validateLoginFields()){
+            if (!validateLoginFields()) {
                 return@launch
             }
-            _uiState.update {
-                it.copy(isLoading = true)
-            }
+            _uiState.update { it.copy(isLoading = true, generalError = null) }
 
-            delay(2000)
+            try {
+                val response = userRepository.login(_uiState.value.email, _uiState.value.password)
 
-            if(_uiState.value.email == "test@test.com" && _uiState.value.password == "123456"){
-                navViewModel.onNavEvent(NavEvent.ToHome)
-                _uiState.update { it.copy(isLoading = false) }
-            }else{
-                _uiState.update {it.copy(isLoading = false, generalError = "Email o contraseña incorrectos.")}
-            }
-        }
-    }
-
-    fun register (){
-        viewModelScope.launch {
-            if (!validateRegisterFields()){
-                return@launch
-            }
-            _uiState.update { it.copy(isLoading = true) }
-
-            delay(2000)
-
-            if(_uiState.value.email == "test@test.com"){
-                _uiState.update { it.copy(isLoading = false, emailError = "Este correo ya esta en uso.") }
-            }else{
-                navViewModel.onNavEvent(NavEvent.ToLogin)
+                if (response.isSuccessful) {
+                    navViewModel.onNavEvent(NavEvent.ToHome)
+                } else {
+                    _uiState.update { it.copy(generalError = "Invalid credentials.") }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(generalError = "An unexpected error occurred.") }
+            } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
 
-    private fun validateLoginFields(): Boolean{
+    fun register() {
+        viewModelScope.launch {
+            if (!validateRegisterFields()) {
+                return@launch
+            }
+            _uiState.update { it.copy(isLoading = true, generalError = null) }
+
+            try {
+                val response = userRepository.register(_uiState.value.email, _uiState.value.password)
+
+                if (response.isSuccessful) {
+                    navViewModel.onNavEvent(NavEvent.ToLogin)
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    if (errorBody != null && errorBody.contains("User already exists")) {
+                        _uiState.update { it.copy(emailError = "User already exists.") }
+                    } else {
+                        _uiState.update { it.copy(generalError = "Registration failed.") }
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(generalError = "An unexpected error occurred.") }
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    private fun validateLoginFields(): Boolean {
         val emailValid = isEmailValid(_uiState.value.email)
-
-        _uiState.update {
-            it.copy(
-                emailError = if (emailValid) "Porfavor introduce un email valido." else null
-            )
+        if (!emailValid) {
+            _uiState.update { it.copy(emailError = "Please enter a valid email.") }
         }
         return emailValid
     }
 
     private fun validateRegisterFields(): Boolean {
-        val registerUsername = isEmailValid(_uiState.value.email)
-        val registerPassword = _uiState.value.password.length >= 6
-        val passwordMatch = _uiState.value.password == _uiState.value.confirmPassword
+        val emailValid = isEmailValid(_uiState.value.email)
+        val passwordValid = _uiState.value.password.length >= 6
+        val passwordsMatch = _uiState.value.password == _uiState.value.confirmPassword
 
         _uiState.update {
             it.copy(
-                emailError = if(!registerUsername) "Porfavor, introduce un email valido." else null,
-                passwordError = if (!registerPassword) "La contraseña debe tener al menos 6 caracteres." else null,
-                confirmPasswordError = if (passwordMatch) "Las contraseñas no coinciden." else null
+                emailError = if (!emailValid) "Please enter a valid email." else null,
+                passwordError = if (!passwordValid) "Password must be at least 6 characters." else null,
+                confirmPasswordError = if (!passwordsMatch) "Passwords do not match." else null
             )
         }
-        return registerUsername && registerPassword
+        return emailValid && passwordValid && passwordsMatch
     }
 
-    private fun isEmailValid(email:String) :Boolean{
-        return Pattern.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}\$", email)
+    private fun isEmailValid(email: String): Boolean {
+        return Pattern.compile(
+            "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"
+        ).matcher(email).matches()
     }
 }

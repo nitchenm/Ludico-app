@@ -9,10 +9,13 @@ import androidx.work.WorkManager
 import com.example.ludico_app.data.db.dao.LudicoDatabase
 import com.example.ludico_app.data.remote.RetrofitInstance
 import com.example.ludico_app.data.repository.EventRepository
+import com.example.ludico_app.data.repository.UserRepository
 import com.example.ludico_app.workers.SyncWorker
+import com.example.ludico_app.workers.SyncWorkerFactory
 import java.util.concurrent.TimeUnit
 
-class LudicoApplication : Application(), Configuration.Provider {
+// 1. Remove Configuration.Provider from the class definition
+class LudicoApplication : Application() {
 
     val database: LudicoDatabase by lazy { LudicoDatabase.getDatabase(this) }
 
@@ -20,8 +23,20 @@ class LudicoApplication : Application(), Configuration.Provider {
         EventRepository(database.eventDao(), database.userDao(), RetrofitInstance.api)
     }
 
+    val userRepository: UserRepository by lazy {
+        UserRepository(RetrofitInstance.api)
+    }
+
     override fun onCreate() {
         super.onCreate()
+
+        // 2. Manually initialize WorkManager
+        val workManagerConfig = Configuration.Builder()
+            .setWorkerFactory(SyncWorkerFactory(eventRepository))
+            .build()
+        WorkManager.initialize(this, workManagerConfig)
+
+        // Now schedule the work
         setupRecurringWork()
     }
 
@@ -36,13 +51,8 @@ class LudicoApplication : Application(), Configuration.Provider {
             .setConstraints(constraints)
             .build()
 
-        WorkManager.getInstance(applicationContext).enqueue(
-            repeatingRequest
-        )
+        WorkManager.getInstance(applicationContext).enqueue(repeatingRequest)
     }
 
-    override val workManagerConfiguration:
-        get() = Configuration.Builder()
-            .setMinimumLoggingLevel(android.util.Log.INFO)
-            .build()
+    // 3. The getWorkManagerConfiguration() method is no longer needed.
 }

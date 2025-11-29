@@ -3,6 +3,7 @@ package com.example.ludico_app.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.ludico_app.data.repository.EventRepository
+import com.example.ludico_app.data.repository.UserRepository
 import com.example.ludico_app.viewmodels.CreateEventViewModel // Importa el ViewModel correcto
 
 /**
@@ -12,14 +13,15 @@ import com.example.ludico_app.viewmodels.CreateEventViewModel // Importa el View
  */
 class LudicoViewModelFactory(
     private val navViewModel: NavViewModel,
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val userRepository: UserRepository
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
             modelClass.isAssignableFrom(AuthViewModel::class.java) -> {
-                AuthViewModel(navViewModel) as T
+                AuthViewModel(navViewModel, userRepository) as T
             }
             modelClass.isAssignableFrom(CreateEventViewModel::class.java) -> {
                 CreateEventViewModel(eventRepository) as T

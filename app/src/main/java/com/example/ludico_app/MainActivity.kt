@@ -49,7 +49,8 @@ class MainActivity : ComponentActivity() {
 
                 val ludicoViewModelFactory = LudicoViewModelFactory(
                     navViewModel = navViewModel,
-                    eventRepository = application.eventRepository
+                    eventRepository = application.eventRepository,
+                    userRepository = application.userRepository
                 )
 
                 val navEvent by navViewModel.navigationEvents.collectAsState(initial = null)
