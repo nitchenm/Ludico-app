@@ -21,18 +21,18 @@ Integración en Eventos: Los usuarios pueden buscar y unirse a eventos existente
 Optimizacion UX/UI: Los usuarios interactuan con tecnologias de diseño como Material3 creando un enterno mas enriquecedor con funcionalidades y filtros que aumentan su experiencia en la App
 
 🌐 4. Endpoints Utilizados
-El proyecto consume datos de dos fuentes principales: una API externa de terceros y un Microservicio propio/desarrollado por el equipo.
-
-A. API Externa (Terceros)
-Nombre de la API: [Nombre de la API, e.g., OpenWeatherMap, TheMovieDB]
+El proyecto consume microservicio propio/desarrollado por el equipo.
 
 Propósito: Obtener datos de [describir qué datos se obtienen].
 
 Endpoint(s) Ejemplo:
 
-GET \https://www.localconditions.com/weather-del-city-oklahoma/ok044/
+POST
+// Login
+http://localhost:8080/auth/login?email=test@ludico.com&password=Test123456
+// Events
+http://localhost:8080/api/v1/events
 
-POST \https://normograma.sena.edu.co/
 
 B. Microservicio Propio
 Nombre del Servicio: [Nombre del Microservicio, e.g., ProductCatalogService]
