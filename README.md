@@ -6,7 +6,7 @@ Ludico es para todos.
 👥  Integrantes
 [Sebastian Mondaca] 
 
-[Natalia Yañez] 
+[Nitchen Martinez] 
 
 
 ✨  Funcionalidades
