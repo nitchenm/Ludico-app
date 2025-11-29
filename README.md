@@ -65,5 +65,12 @@ Ejecutar: Selecciona un emulador propio de android studio o conecta un dispositi
 
 🔒 6. Archivos de Firma
 
+<img width="504" height="616" alt="firmapt1" src="https://github.com/user-attachments/assets/efd99acb-eefe-4a91-9cf2-3dfcabc4b177" />
+
+<img width="885" height="404" alt="firma_guardada" src="https://github.com/user-attachments/assets/8231e5f0-320e-42e0-bcd2-e156cfb6f43f" />
+
+   
+
+
 
 
