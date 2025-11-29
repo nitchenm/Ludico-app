@@ -1,22 +1,26 @@
-
 package com.example.ludico_app.data.remote
 
-import com.example.ludico_app.data.model.Post
-import com.example.ludico_app.model.AuthRequest
-import com.example.ludico_app.model.AuthResponse
 import com.example.ludico_app.data.dto.EventDto
+import com.example.ludico_app.data.model.Post
+import com.example.ludico_app.model.AuthResponse
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
+import retrofit2.http.*
 
 interface ApiService {
 
-    @POST("login")
-    suspend fun login(@Body request: AuthRequest): Response<AuthResponse>
+    @FormUrlEncoded
+    @POST("auth/login")
+    suspend fun login(
+        @Field("email") email: String,
+        @Field("password") pass: String
+    ): Response<AuthResponse>
 
-    @POST("register")
-    suspend fun register(@Body request: AuthRequest): Response<AuthResponse>
+    @FormUrlEncoded
+    @POST("auth/register")
+    suspend fun register(
+        @Field("email") email: String,
+        @Field("password") pass: String
+    ): Response<String>
 
     @GET("posts")
     suspend fun getPosts(): List<Post>

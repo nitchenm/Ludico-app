@@ -1,21 +1,17 @@
-
 package com.example.ludico_app.data.repository
 
 import com.example.ludico_app.data.remote.ApiService
 import com.example.ludico_app.data.remote.RetrofitInstance
-import com.example.ludico_app.model.AuthRequest
 import com.example.ludico_app.model.AuthResponse
 import retrofit2.Response
 
-class UserRepository {
+class UserRepository(private val apiService: ApiService) {
 
-    private val apiService: ApiService = RetrofitInstance.api
-
-    suspend fun login(authRequest: AuthRequest): Response<AuthResponse> {
-        return apiService.login(authRequest)
+    suspend fun login(email: String, pass: String): Response<AuthResponse> {
+        return apiService.login(email, pass)
     }
 
-    suspend fun register(authRequest: AuthRequest): Response<AuthResponse> {
-        return apiService.register(authRequest)
+    suspend fun register(email: String, pass: String): Response<String> {
+        return apiService.register(email, pass)
     }
 }

@@ -3,18 +3,17 @@ package com.example.ludico_app.workers
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.ludico_app.LudicoApplication
+import com.example.ludico_app.data.repository.EventRepository
 
 class SyncWorker(
     appContext: Context,
-    workerParams: WorkerParameters
+    workerParams: WorkerParameters,
+    private val eventRepository: EventRepository
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
-        val application = applicationContext as LudicoApplication
-        val repository = application.eventRepository
         return try {
-            repository.syncEvents()
+            eventRepository.syncEvents()
             Result.success()
         } catch (e: Exception) {
             Result.retry()
