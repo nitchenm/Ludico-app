@@ -48,8 +48,6 @@ Java Development Kit (JDK): Versión 21
 
 Android Studio: Última versión estable.
 
-[Microservicio]: El microservicio debe estar en ejecución en la URL: \https://www.youtube.com/watch?v=2sFczigWppk.
-
 B. Ejecución de la Aplicación Móvil
 Clonar el Repositorio:
 
