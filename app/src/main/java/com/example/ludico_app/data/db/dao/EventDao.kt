@@ -39,7 +39,7 @@ interface EventDao {
     /**
      * Obtiene todos los eventos creados por un usuario específico.
      */
-    @Query("SELECT * FROM events WHERE hostUserId = :userId ORDER BY date DESC")
+    @Query("SELECT * FROM events WHERE creatorId = :userId ORDER BY date DESC")
     fun getEventsCreatedByUser(userId: String): Flow<List<Event>>
 
     @Query("SELECT * FROM users WHERE userId = :userId")
@@ -50,4 +50,7 @@ interface EventDao {
 
     @Query("SELECT * FROM events WHERE isSynced = 0")
     suspend fun getUnsyncedEvents(): List<Event>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(events: List<Event>)
 }

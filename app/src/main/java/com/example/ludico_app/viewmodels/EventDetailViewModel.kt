@@ -34,19 +34,15 @@ class EventDetailViewModel(
     }
     val uiState: StateFlow<EventDetailUiState> =
         if (eventId != null) {
-            // 1. Obtenemos el Flow del evento.
             eventRepository.getEvent(eventId)
-                .filterNotNull() // Nos aseguramos de no continuar si el evento es nulo.
-                // 2. Cuando el evento llega, 'flatMapLatest' cambia a un nuevo Flow para obtener el host.
+                .filterNotNull()
                 .flatMapLatest { event ->
-                    // 3. Obtenemos el Flow del usuario (host).
-                    eventRepository.getUser(event.hostUserId).map { host ->
-                        // 4. Cuando el host llega, combinamos todo en el UiState final.
+                    eventRepository.getUser(event.creatorId).map { host ->
                         Log.d("AppDebug", "EventDetailVM: Host cargado: ${host?.userName}")
                         EventDetailUiState(
                             event = event,
-                            host = host, // <-- AHORA PASAMOS EL HOST REAL
-                            isUserTheCreator = event.hostUserId == "user_123", // TODO: Usar ID de usuario logueado
+                            host = host,
+                            isUserTheCreator = event.creatorId == "1", // TODO: Usar ID de usuario logueado
                             isLoading = false
                         )
                     }
@@ -57,23 +53,19 @@ class EventDetailViewModel(
                     initialValue = EventDetailUiState(isLoading = true)
                 )
         } else {
-            // Este bloque no cambia
             MutableStateFlow(EventDetailUiState(isLoading = false, event = null))
         }
     fun toggleRsvp() {
         // TODO: Implementar la lógica para unirse/abandonar un evento.
-        // Esto implicaría añadir/quitar una fila en una tabla de relación "UserEventCrossRef".
     }
 
     fun shareEvent(context: Context) {
-        // Obtenemos el evento actual del estado de la UI
         val event = uiState.value.event
         if (event == null) {
             Log.w("AppDebug", "ShareEvent: No se puede compartir porque el evento es nulo.")
             return
         }
 
-        // 1. Construimos el mensaje que queremos compartir.
         val shareText = """
             ¡Te invito a un evento de juegos!
             
@@ -87,18 +79,14 @@ class EventDetailViewModel(
             ¡Descarga Ludico para más detalles!
         """.trimIndent()
 
-        // 2. Creamos un Intent de tipo ACTION_SEND.
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_TEXT, shareText)
-            type = "text/plain" // Indicamos que estamos enviando texto plano.
+            type = "text/plain"
         }
 
-        // 3. Creamos un "chooser" para que el usuario elija la app con la que quiere compartir.
         val shareIntent = Intent.createChooser(sendIntent, "Compartir evento vía...")
 
-        // 4. Lanzamos el Intent desde el contexto.
-        // Es importante añadir FLAG_ACTIVITY_NEW_TASK cuando se lanza un Intent desde fuera de una Activity.
         context.startActivity(shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
     companion object {
@@ -108,7 +96,6 @@ class EventDetailViewModel(
                 modelClass: Class<T>,
                 extras: CreationExtras
             ): T {
-                // Obtenemos el SavedStateHandle y la Application desde los 'extras'
                 val savedStateHandle = extras.createSavedStateHandle()
                 val application = (extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as LudicoApplication)
 

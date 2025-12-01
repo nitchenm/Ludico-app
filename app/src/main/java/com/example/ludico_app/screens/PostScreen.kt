@@ -30,7 +30,6 @@ import com.example.ludico_app.viewmodels.PostViewModel
 @Composable
 fun PostScreen(viewModel: PostViewModel){
 
-    // 3. ERROR CORREGIDO: Usar 'by' para delegar el estado
     val posts by viewModel.postList.collectAsState()
 
     Scaffold(
@@ -41,7 +40,7 @@ fun PostScreen(viewModel: PostViewModel){
         }
     ){ innerPadding ->
         Box(modifier = Modifier
-            // 4. ERROR CORREGIDO: Aplicar el padding solo una vez
+
             .padding(innerPadding)
             .fillMaxSize()
         ){
@@ -68,7 +67,7 @@ fun PostScreen(viewModel: PostViewModel){
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
-                    } // 5. ERROR CORREGIDO: Se eliminó la llave '}' extra
+                    }
                 }
             }
         }
