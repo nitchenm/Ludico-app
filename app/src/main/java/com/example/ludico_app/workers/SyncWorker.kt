@@ -13,7 +13,7 @@ class SyncWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            eventRepository.syncEvents()
+            eventRepository.refreshEvents()
             Result.success()
         } catch (e: Exception) {
             Result.retry()

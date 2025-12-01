@@ -74,14 +74,14 @@ class CreateEventViewModel(
                 time = _uiState.value.time,
                 location = _uiState.value.location,
                 maxParticipants = _uiState.value.maxParticipants.toIntOrNull() ?: 0,
-                hostUserId = "user_123" // TODO: Reemplazar con el ID del usuario real logueado.
+                creatorId = "1" // TODO: Reemplazar con el ID del usuario real logueado.
             )
 
-            Log.d("AppDebu", "CreateEventVM: Intentando guardar evento con id : ${newEvent.eventId}")
+            Log.d("AppDebug", "CreateEventVM: Intentando guardar evento con id : ${newEvent.eventId}")
 
             // 2. Usamos el repositorio inyectado para guardar el evento en la base de datos.
             eventRepository.insert(newEvent)
-
+            Log.d("AppDebug", "CreateEventVM: Evento guardado con id : ${newEvent.eventId}")
             // 3. Actualizamos el estado de la UI para indicar que el proceso ha terminado y fue exitoso.
             _uiState.update { it.copy(isLoading = false, eventCreatedSuccessfully = true) }
         }

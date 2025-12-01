@@ -2,6 +2,7 @@ package com.example.ludico_app.data.dto
 
 import com.example.ludico_app.data.entities.Event
 
+// 1. El campo ha sido renombrado a creatorId
 data class EventDto(
     val eventId: String,
     val title: String,
@@ -11,9 +12,10 @@ data class EventDto(
     val time: String,
     val location: String,
     val maxParticipants: Int,
-    val hostUserId: String
+    val creatorId: String // <-- CAMBIADO
 )
 
+// 2. La función de mapeo ahora también usa creatorId
 fun Event.toEventDto(): EventDto {
     return EventDto(
         eventId = this.eventId,
@@ -24,6 +26,6 @@ fun Event.toEventDto(): EventDto {
         time = this.time,
         location = this.location,
         maxParticipants = this.maxParticipants,
-        hostUserId = this.hostUserId
+        creatorId = this.creatorId // <-- CAMBIADO
     )
 }
