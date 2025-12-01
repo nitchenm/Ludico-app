@@ -58,7 +58,7 @@ class CreateEventViewModel(
 
     fun createEvent() {
         if (!validateFields()) {
-            return // La validación falló, no continuamos.
+            return
         }
 
         // Lanzamos una corrutina en el scope del ViewModel para la operación de base de datos.
