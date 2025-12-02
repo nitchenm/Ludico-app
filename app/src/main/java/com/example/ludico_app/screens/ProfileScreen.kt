@@ -34,6 +34,7 @@ import com.example.ludico_app.viewmodels.NavViewModel
 import com.example.ludico_app.viewmodels.ProfileTab
 import com.example.ludico_app.model.ProfileUiState
 import com.example.ludico_app.viewmodels.ProfileViewModel
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +83,7 @@ fun ProfileScreen(
             // Contenido dinámico según la pestaña seleccionada
             when (uiState.selectedTab) {
                 ProfileTab.MY_EVENTS -> MyEventsContent(uiState)
-                ProfileTab.PREFERENCES -> PreferencesContent(uiState)
+                ProfileTab.PREFERENCES -> PreferencesContent(profileViewModel.uiState.collectAsState().value,navViewModel,profileViewModel)
 
             }
         }
@@ -185,7 +186,7 @@ fun EventListSection(title: String, events: List<String>) {
 }
 
 @Composable
-fun PreferencesContent(uiState: ProfileUiState) {
+fun PreferencesContent(uiState: ProfileUiState, navViewModel: NavViewModel, profileViewModel: ProfileViewModel) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
         Text("Juegos Favoritos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
@@ -202,6 +203,44 @@ fun PreferencesContent(uiState: ProfileUiState) {
                 }
             }
         }
+        Spacer(modifier = Modifier.height(32.dp))
+        Divider()
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // --- SECCIÓN DE CUENTA Y SOPORTE (NUEVO) ---
+        Text("Cuenta y Soporte", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón Soporte Técnico
+        OutlinedButton(
+            onClick = { navViewModel.onNavEvent(NavEvent.ToSupport) }, // <-- NAVEGACIÓN A SOPORTE
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.SupportAgent, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Contactar Soporte Técnico")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Botón Cerrar Sesión
+        Button(
+            onClick = {
+                profileViewModel.logout()
+                navViewModel.onNavEvent(NavEvent.ToLogin)
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text("Cerrar Sesión")
+        }
+
+        // Espacio extra al final para que no choque con el BottomBar
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 
