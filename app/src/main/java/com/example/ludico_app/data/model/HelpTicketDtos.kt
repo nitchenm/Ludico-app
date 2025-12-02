@@ -17,7 +17,12 @@ data class CreateTicketRequest(
  * DTO para la respuesta que el backend podría enviar tras crear el ticket.
  * Es una buena práctica para confirmar que la operación fue exitosa.
  */
-data class TicketResponse(
-    val id: Long, // Suponiendo que el backend devuelve el ID del ticket creado.
-    val message: String
+data class SupportTicketResponse(
+    val id: Long,
+    val userId: Long,
+    val contactEmail: String,
+    val subject: String,
+    val description: String,
+    val status: String,
+    val createdAt: String // Use String for simplicity to parse LocalDateTime
 )

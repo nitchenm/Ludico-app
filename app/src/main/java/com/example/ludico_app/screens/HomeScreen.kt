@@ -75,7 +75,7 @@ fun HomeScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Crónicas de Partidas", fontWeight = FontWeight.Bold) },
                 actions = {
-                    IconButton(onClick = { /* TODO: Nav to Profile */ }) {
+                    IconButton(onClick = { navViewModel.onNavEvent(NavEvent.ToProfile) }) {
                         Icon(Icons.Default.AccountCircle, "Perfil")
                     }
                 }

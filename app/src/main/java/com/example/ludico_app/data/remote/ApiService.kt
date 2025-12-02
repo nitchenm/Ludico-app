@@ -3,8 +3,11 @@ package com.example.ludico_app.data.remote
 import com.example.ludico_app.data.dto.BackendEventDto
 import com.example.ludico_app.data.dto.EventDto
 import com.example.ludico_app.data.entities.Event
+import com.example.ludico_app.data.model.CreateTicketRequest
 import com.example.ludico_app.data.model.Post
+import com.example.ludico_app.data.model.SupportTicketResponse
 import com.example.ludico_app.model.AuthResponse
+import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -32,6 +35,6 @@ interface ApiService {
     @GET("api/v1/events")
     fun getAllEvents(): Response<List<Event>>
 
-    @POST("api/tickets/create") // ¡IMPORTANTE! Ajusta esta ruta a la de tu Controller en Spring Boot
-    suspend fun createTicket(@Body request: CreateTicketRequest): TicketResponse
+    @POST("api/v1/support")
+    suspend fun createSupportTicket(@Body request: CreateTicketRequest): SupportTicketResponse
 }

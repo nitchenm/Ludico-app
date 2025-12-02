@@ -6,6 +6,8 @@ import com.example.ludico_app.data.db.dao.UserDao
 import com.example.ludico_app.data.dto.toEventDto
 import com.example.ludico_app.data.entities.Event
 import com.example.ludico_app.data.entities.User
+import com.example.ludico_app.data.model.CreateTicketRequest
+import com.example.ludico_app.data.model.SupportTicketResponse
 import com.example.ludico_app.data.remote.ApiService
 import kotlinx.coroutines.flow.Flow
 import java.io.IOException
@@ -72,8 +74,8 @@ class EventRepository(
         /**
          * Llama al endpoint de la API para crear un nuevo ticket de ayuda.
          */
-        suspend fun createTicket(request: CreateTicketRequest): TicketResponse {
-            return apiService.createTicket(request)
+        suspend fun createTicket(request: CreateTicketRequest): SupportTicketResponse {
+            return apiService.createSupportTicket(request)
         }
 
     }

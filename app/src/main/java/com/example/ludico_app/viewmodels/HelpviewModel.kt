@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ludico_app.data.model.CreateTicketRequest
 import com.example.ludico_app.data.repository.HelpRepository
+import com.example.ludico_app.data.repository.SupportRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -20,7 +21,7 @@ data class HelpFormState(
     val submissionError: String? = null
 )
 
-class HelpViewModel(private val repository: HelpRepository) : ViewModel() {
+class HelpViewModel(private val repository: SupportRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HelpFormState())
     val uiState = _uiState.asStateFlow()
@@ -45,7 +46,7 @@ class HelpViewModel(private val repository: HelpRepository) : ViewModel() {
                     subject = uiState.value.subject,
                     description = uiState.value.description
                 )
-                repository.createTicket(request) // Se realiza la llamada a la API
+                repository.createTicket(request.contactEmail,request.subject,request.description) // Se realiza la llamada a la API
 
                 // Éxito
                 _uiState.update { it.copy(isLoading = false, submissionSuccess = true) }

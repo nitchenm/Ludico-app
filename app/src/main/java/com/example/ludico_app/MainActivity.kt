@@ -3,6 +3,7 @@ package com.example.ludico_app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
@@ -19,7 +20,7 @@ import androidx.navigation.navArgument
 import com.example.ludico_app.navigation.NavEvent
 import com.example.ludico_app.navigation.Routes
 import com.example.ludico_app.screens.*
-import com.example.ludico_app.ui.theme.LudicoappTheme
+import com.example.ludico_app.ui.all.theme.LudicoappTheme
 import com.example.ludico_app.viewmodels.*
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +31,7 @@ class MainActivity : ComponentActivity() {
 
         // Obtenemos la instancia de nuestra clase Application, que contiene los repositorios.
         val application = application as LudicoApplication
-
+        val navViewModel: NavViewModel by viewModels()
         setContent {
             LudicoappTheme {
                 val windowSizeClass = calculateWindowSizeClass(this)
@@ -39,7 +40,9 @@ class MainActivity : ComponentActivity() {
                 val ludicoViewModelFactory = LudicoViewModelFactory(
                     eventRepository = application.eventRepository,
                     userRepository = application.userRepository,
-                    sessionManager = application.sessionManager
+                    sessionManager = application.sessionManager,
+                    supportRepository = application.supportRepository,
+                    navViewModel = navViewModel
                 )
 
                 // 2. Llamamos al contenido principal de la app, que se encargará de la navegación.
@@ -79,8 +82,9 @@ fun AppContent(
                 is NavEvent.ToLogin -> navController.navigate(Routes.Login.route)
                 is NavEvent.ToProfile -> navController.navigate(Routes.Profile.route)
                 is NavEvent.ToSettings -> navController.navigate(Routes.Settings.route)
+                is NavEvent.ToSupport -> navController.navigate(Routes.Support.route)
             }
-            navViewModel.onNavEventHandled()
+            navViewModel.onNavEvent(event)
         }
     }
 
@@ -110,7 +114,7 @@ fun AppContent(
             EventDetailScreen(navViewModel = navViewModel, eventDetailViewModel = eventDetailViewModel, windowSizeClass = windowSizeClass)
         }
         composable(Routes.Profile.route) {
-            val userViewModel: UserViewModel = viewModel(factory = ludicoViewModelFactory)
+            val userViewModel: ProfileViewModel = viewModel(factory = ludicoViewModelFactory)
             ProfileScreen(navViewModel, userViewModel)
         }
         composable(Routes.CreateEvent.route) {
@@ -119,6 +123,10 @@ fun AppContent(
         }
         composable(Routes.Settings.route) {
             SettingsScreen(navViewModel = navViewModel)
+        }
+        composable(Routes.Support.route){
+            val supportViewmodel: SupportViewModel = viewModel(factory = ludicoViewModelFactory)
+            SupportScreen(navViewModel = navViewModel, supportViewModel = supportViewmodel)
         }
     }
 }
