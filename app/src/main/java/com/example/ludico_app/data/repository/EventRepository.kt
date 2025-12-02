@@ -28,7 +28,10 @@ class EventRepository(
     suspend fun insert(event: Event) {
         val eventDto = event.toEventDto()
         try {
-            Log.d("AppDebug", "EventRepository: Intentando guardar evento con id : ${event.eventId}")
+            Log.d(
+                "AppDebug",
+                "EventRepository: Intentando guardar evento con id : ${event.eventId}"
+            )
             val response = apiService.createEvent(eventDto)
 
             if (response.isSuccessful) {
@@ -53,7 +56,7 @@ class EventRepository(
         try {
             // 1. Fetch events from the remote API
             val remoteEvents = apiService.getAllEvents()
-            remoteEvents.body()?.let { remoteEvents-> eventDao.insertAll(remoteEvents) }
+            remoteEvents.body()?.let { remoteEvents -> eventDao.insertAll(remoteEvents) }
             // 2. Insert the fetched events into the local database
 
             Log.d("AppDebug", "EventRepository: Successfully refreshed events from remote.")
@@ -62,5 +65,16 @@ class EventRepository(
             // Re-throwing the exception so the Worker knows the operation failed
             throw e
         }
+    }
+
+    class HelpRepository(private val apiService: ApiService) {
+
+        /**
+         * Llama al endpoint de la API para crear un nuevo ticket de ayuda.
+         */
+        suspend fun createTicket(request: CreateTicketRequest): TicketResponse {
+            return apiService.createTicket(request)
+        }
+
     }
 }

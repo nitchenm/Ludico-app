@@ -17,9 +17,6 @@ data class EventDetailUiState(
     // El usuario que creó el evento.
     val host: User? = null,
 
-    // Lista de usuarios que se han unido al evento.
-    // La llamaremos 'participants' para que coincida con lo que la pantalla espera.
-    // Por ahora será una lista de User, podrías crear un modelo más simple si lo necesitas.
     val participants: List<User> = emptyList(),
 
     // Lista de comentarios del evento.

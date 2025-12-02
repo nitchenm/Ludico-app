@@ -36,7 +36,7 @@ class HomeViewModel(
         .map { eventList -> // 2. Transformamos la lista de Event en nuestro objeto HomeUiState.
             HomeUiState(eventList = eventList, isLoading = false)
         }
-        .stateIn( // 3. Convertimos el Flow en un StateFlow para que la UI pueda recolectarlo de forma segura.
+        .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000), // El Flow se activa cuando la UI es visible y se detiene 5s después.
             initialValue = HomeUiState() // Estado inicial mientras se cargan los datos.

@@ -31,4 +31,7 @@ interface ApiService {
     suspend fun createEvent(@Body event: EventDto): Response<BackendEventDto>
     @GET("api/v1/events")
     fun getAllEvents(): Response<List<Event>>
+
+    @POST("api/tickets/create") // ¡IMPORTANTE! Ajusta esta ruta a la de tu Controller en Spring Boot
+    suspend fun createTicket(@Body request: CreateTicketRequest): TicketResponse
 }

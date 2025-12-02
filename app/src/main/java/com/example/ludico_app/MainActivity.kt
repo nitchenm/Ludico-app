@@ -3,20 +3,14 @@ package com.example.ludico_app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -25,8 +19,7 @@ import androidx.navigation.navArgument
 import com.example.ludico_app.navigation.NavEvent
 import com.example.ludico_app.navigation.Routes
 import com.example.ludico_app.screens.*
-import com.example.ludico_app.ui.all.theme.LudicoappTheme
-import com.example.ludico_app.ui.all.utils.AdaptiveScreenFun
+import com.example.ludico_app.ui.theme.LudicoappTheme
 import com.example.ludico_app.viewmodels.*
 
 class MainActivity : ComponentActivity() {
@@ -35,118 +28,97 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Obtenemos la instancia de nuestra clase Application, que contiene los repositorios.
         val application = application as LudicoApplication
 
         setContent {
             LudicoappTheme {
-                val isInitialized by application.isInitialized.collectAsState()
-
                 val windowSizeClass = calculateWindowSizeClass(this)
 
-                if (isInitialized) {
-                    AppContent(application, windowSizeClass)
-                } else {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
+                // 1. Creamos la Factory UNA SOLA VEZ aquí, pasándole las dependencias de Application.
+                val ludicoViewModelFactory = LudicoViewModelFactory(
+                    eventRepository = application.eventRepository,
+                    userRepository = application.userRepository,
+                    sessionManager = application.sessionManager
+                )
+
+                // 2. Llamamos al contenido principal de la app, que se encargará de la navegación.
+                AppContent(
+                    navController = rememberNavController(),
+                    ludicoViewModelFactory = ludicoViewModelFactory,
+                    windowSizeClass = windowSizeClass
+                )
             }
         }
     }
 }
 
 @Composable
-fun AppContent(application: LudicoApplication, windowSizeClass: WindowSizeClass) {
-    val navController = rememberNavController()
-    val navViewModel: NavViewModel = viewModel()
+fun AppContent(
+    navController: NavHostController,
+    ludicoViewModelFactory: LudicoViewModelFactory,
+    windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass
+) {
+    // 3. Obtenemos la instancia del NavViewModel a través de la factory.
+    //    Esto asegura que sea la misma instancia para todo el NavHost.
+    val navViewModel: NavViewModel = viewModel(factory = ludicoViewModelFactory)
 
-    val ludicoViewModelFactory = LudicoViewModelFactory(
-        navViewModel = navViewModel,
-        eventRepository = application.eventRepository,
-        userRepository = application.userRepository,
-        sessionManager = application.sessionManager
-    )
-
+    // El LaunchedEffect para manejar la navegación.
     val navEvent by navViewModel.navigationEvents.collectAsState(initial = null)
-
     LaunchedEffect(navEvent) {
-        when (val event = navEvent) {
-            is NavEvent.ToHome -> navController.navigate(Routes.Home.route) {
-                popUpTo(navController.graph.startDestinationId)
-                launchSingleTop = true
+        navEvent?.let { event ->
+            when (event) {
+                is NavEvent.ToHome -> navController.navigate(Routes.Home.route) {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                    launchSingleTop = true
+                }
+                is NavEvent.ToDetail -> navController.navigate(Routes.Detail.createRoute(event.eventId))
+                is NavEvent.Back -> navController.popBackStack()
+                is NavEvent.ToCreateEvent -> navController.navigate(Routes.CreateEvent.route)
+                is NavEvent.ToRegister -> navController.navigate(Routes.Register.route)
+                is NavEvent.ToLogin -> navController.navigate(Routes.Login.route)
+                is NavEvent.ToProfile -> navController.navigate(Routes.Profile.route)
+                is NavEvent.ToSettings -> navController.navigate(Routes.Settings.route)
             }
-            is NavEvent.ToDetail -> navController.navigate(Routes.Detail.createRoute(event.eventId))
-            is NavEvent.ToSettings -> navController.navigate(Routes.Settings.route)
-            is NavEvent.Back -> navController.popBackStack()
-            is NavEvent.ToCreateEvent -> navController.navigate(Routes.CreateEvent.route)
-            is NavEvent.ToLogin -> navController.navigate(Routes.Login.route) {
-                popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                launchSingleTop = true
-            }
-            is NavEvent.ToRegister -> navController.navigate(Routes.Register.route)
-            is NavEvent.ToProfile -> navController.navigate(Routes.Profile.route)
-            null -> Unit
+            navViewModel.onNavEventHandled()
         }
     }
 
+    // 4. Se define el NavHost, que es el controlador de qué pantalla se muestra.
     NavHost(
         navController = navController,
         startDestination = Routes.Login.route
     ) {
+        // 5. AHORA TODAS LAS PANTALLAS OBTIENEN SUS VIEWMODELS DE LA MISMA FACTORY
         composable(Routes.Login.route) {
             val authViewModel: AuthViewModel = viewModel(factory = ludicoViewModelFactory)
-            LoginScreen(
-                authViewModel = authViewModel,
-                navViewModel = navViewModel
-            )
+            LoginScreen(authViewModel = authViewModel, navViewModel = navViewModel)
         }
         composable(Routes.Register.route) {
             val authViewModel: AuthViewModel = viewModel(factory = ludicoViewModelFactory)
-            RegisterScreen(
-                authViewModel = authViewModel,
-                navViewModel = navViewModel
-            )
+            RegisterScreen(authViewModel = authViewModel, navViewModel = navViewModel)
         }
-        composable(Routes.CreateEvent.route) {
-            val createEventViewModel: CreateEventViewModel = viewModel(factory = ludicoViewModelFactory)
-            CreateEventScreen(
-                navViewModel = navViewModel,
-                createEventViewModel = createEventViewModel
-            )
-        }
-
         composable(Routes.Home.route) {
             val homeViewModel: HomeViewModel = viewModel(factory = ludicoViewModelFactory)
-            HomeScreen(
-                navViewModel = navViewModel,
-                homeViewModel = homeViewModel,
-                windowSizeClass = windowSizeClass
-            )
+            HomeScreen(navViewModel = navViewModel, homeViewModel = homeViewModel, windowSizeClass = windowSizeClass)
         }
-
         composable(
             route = Routes.Detail.route,
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
         ) {
-            val eventDetailViewModel: EventDetailViewModel = viewModel(factory = EventDetailViewModel.Factory)
-            EventDetailScreen(
-                navViewModel = navViewModel,
-                eventDetailViewModel = eventDetailViewModel,
-                windowSizeClass = windowSizeClass
-            )
+            val eventDetailViewModel: EventDetailViewModel = viewModel(factory = ludicoViewModelFactory)
+            EventDetailScreen(navViewModel = navViewModel, eventDetailViewModel = eventDetailViewModel, windowSizeClass = windowSizeClass)
         }
-
-        composable(Routes.Profile.route) { ProfileScreen(navViewModel) }
-        composable(Routes.Settings.route) { /* ... */ }
-    }
-}
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    LudicoappTheme {
-        AdaptiveScreenFun()
+        composable(Routes.Profile.route) {
+            val userViewModel: UserViewModel = viewModel(factory = ludicoViewModelFactory)
+            ProfileScreen(navViewModel, userViewModel)
+        }
+        composable(Routes.CreateEvent.route) {
+            val createEventViewModel: CreateEventViewModel = viewModel(factory = ludicoViewModelFactory)
+            CreateEventScreen(navViewModel, createEventViewModel)
+        }
+        composable(Routes.Settings.route) {
+            SettingsScreen(navViewModel = navViewModel)
+        }
     }
 }
