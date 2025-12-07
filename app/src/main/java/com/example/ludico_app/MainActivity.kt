@@ -83,6 +83,7 @@ fun AppContent(
                 is NavEvent.ToProfile -> navController.navigate(Routes.Profile.route)
                 is NavEvent.ToSettings -> navController.navigate(Routes.Settings.route)
                 is NavEvent.ToSupport -> navController.navigate(Routes.Support.route)
+                is NavEvent.ToEditEvent -> navController.navigate(Routes.EditEvent.createRoute(event.eventId))
             }
             navViewModel.onNavEvent(event)
         }
@@ -127,6 +128,12 @@ fun AppContent(
         composable(Routes.Support.route){
             val supportViewmodel: SupportViewModel = viewModel(factory = ludicoViewModelFactory)
             SupportScreen(navViewModel = navViewModel, supportViewModel = supportViewmodel)
+        }
+        composable(route = Routes.EditEvent.route,
+            arguments = listOf(navArgument("eventId"){type = NavType.StringType})
+        ){
+            val createEventViewModel: CreateEventViewModel = viewModel(factory = ludicoViewModelFactory)
+            CreateEventScreen(navViewModel, createEventViewModel)
         }
     }
 }

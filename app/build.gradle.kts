@@ -49,6 +49,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     implementation(libs.androidx.ui.test.junit4)
+    implementation(libs.androidx.ui.graphics)
     // --- LIMPIEZA Y SINCRONIZACIÓN DE DEPENDENCIAS DE ROOM ---
 
     // Define una única versión para todas las dependencias de Room.

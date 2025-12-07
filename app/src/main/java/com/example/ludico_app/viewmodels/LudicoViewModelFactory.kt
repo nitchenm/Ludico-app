@@ -18,28 +18,27 @@ class LudicoViewModelFactory(
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>,extras: CreationExtras): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         val savedStateHandle = extras.createSavedStateHandle()
         return when {
             modelClass.isAssignableFrom(AuthViewModel::class.java) -> {
                 AuthViewModel(navViewModel, userRepository, sessionManager) as T
             }
-            modelClass.isAssignableFrom(CreateEventViewModel::class.java) -> {
-                CreateEventViewModel(eventRepository) as T
-            }
             modelClass.isAssignableFrom(HomeViewModel::class.java) -> {
-                HomeViewModel(eventRepository) as T
+                HomeViewModel(eventRepository, sessionManager) as T
             }
-            modelClass.isAssignableFrom(SupportViewModel::class.java) ->{
+            modelClass.isAssignableFrom(SupportViewModel::class.java) -> {
                 SupportViewModel(supportRepository, navViewModel) as T
             }
-            modelClass.isAssignableFrom(EventDetailViewModel::class.java)->{
-                EventDetailViewModel(eventRepository, savedStateHandle) as T
+            modelClass.isAssignableFrom(EventDetailViewModel::class.java) -> {
+                EventDetailViewModel(eventRepository, savedStateHandle, sessionManager) as T
             }
-            modelClass.isAssignableFrom(ProfileViewModel::class.java)->{
+            modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
                 ProfileViewModel(userRepository, sessionManager) as T
             }
-
+            modelClass.isAssignableFrom(CreateEventViewModel::class.java) -> {
+                CreateEventViewModel(eventRepository, savedStateHandle, sessionManager) as T
+            }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
     }

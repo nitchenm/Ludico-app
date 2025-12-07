@@ -15,4 +15,6 @@ sealed interface NavEvent {
 
     data object ToSupport : NavEvent
 
+    data class ToEditEvent(val eventId: String) : NavEvent
+
 }
