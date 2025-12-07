@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -75,7 +76,7 @@ fun HomeScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Crónicas de Partidas", fontWeight = FontWeight.Bold) },
                 actions = {
-                    IconButton(onClick = { /* TODO: Nav to Profile */ }) {
+                    IconButton(onClick = { navViewModel.onNavEvent(NavEvent.ToProfile) }) {
                         Icon(Icons.Default.AccountCircle, "Perfil")
                     }
                 }
@@ -120,7 +121,12 @@ fun HomeScreen(
                     }
                 } else {
                     items(uiState.eventList, key = { it.eventId }) { event ->
-                        AnimatedEventCard(event = event, navViewModel = navViewModel)
+                        AnimatedEventCard(
+                            event = event,
+                            navViewModel = navViewModel,
+                            onDelete = { homeViewModel.deleteEvent(event.eventId) },
+                            isCreator = event.creatorId == uiState.currentUserId
+                        )
                     }
                 }
             }
@@ -129,7 +135,12 @@ fun HomeScreen(
 }
 
 @Composable
-private fun AnimatedEventCard(event: Event, navViewModel: NavViewModel) {
+private fun AnimatedEventCard(
+    event: Event,
+    navViewModel: NavViewModel,
+    onDelete: () -> Unit,
+    isCreator: Boolean
+) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -142,7 +153,12 @@ private fun AnimatedEventCard(event: Event, navViewModel: NavViewModel) {
         enter = fadeIn(animationSpec = tween(durationMillis = 300)) +
                 slideInVertically(initialOffsetY = { it / 2 }, animationSpec = tween(durationMillis = 300))
     ) {
-        EventCard(navViewModel = navViewModel, event = event)
+        EventCard(
+            navViewModel = navViewModel,
+            event = event,
+            onDelete = onDelete,
+            isCreator = isCreator
+        )
     }
 }
 
@@ -150,8 +166,10 @@ private fun AnimatedEventCard(event: Event, navViewModel: NavViewModel) {
 @Composable
 private fun EventCard(
     modifier: Modifier = Modifier,
-    navViewModel: NavViewModel, 
-    event: Event
+    navViewModel: NavViewModel,
+    event: Event,
+    onDelete: () -> Unit,
+    isCreator: Boolean
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -168,12 +186,24 @@ private fun EventCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                event.title, 
-                fontWeight = FontWeight.Bold, 
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary // SealingWaxRed title
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = event.title,
+                    modifier = Modifier.weight(1f),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary // SealingWaxRed title
+                )
+                if (isCreator) {
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, "Delete Event", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
             Text(
                 event.description,
                 style = MaterialTheme.typography.bodyMedium,

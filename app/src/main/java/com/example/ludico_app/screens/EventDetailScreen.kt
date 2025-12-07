@@ -45,7 +45,9 @@ fun EventDetailScreen(
             DetailTopAppBar(
                 isUserTheCreator = uiState.isUserTheCreator,
                 onBackPressed = { navViewModel.onNavEvent(NavEvent.Back) },
-                onEditPressed = { /* TODO: Navegar a pantalla de edición */ } ,
+                onEditPressed = { uiState.event?.let {
+                    event -> navViewModel.onNavEvent(NavEvent.ToEditEvent(event.eventId))
+                 } } ,
                 onSharePressed = { eventDetailViewModel.shareEvent(context) }
             )
         },

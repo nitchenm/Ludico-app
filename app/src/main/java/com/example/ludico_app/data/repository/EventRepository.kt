@@ -7,8 +7,9 @@ import com.example.ludico_app.data.dto.toEventDto
 import com.example.ludico_app.data.entities.Event
 import com.example.ludico_app.data.entities.User
 import com.example.ludico_app.data.remote.ApiService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import java.io.IOException
+import kotlinx.coroutines.withContext
 
 class EventRepository(
     private val eventDao: EventDao,
@@ -25,7 +26,7 @@ class EventRepository(
         return userDao.getUserById(userId)
     }
 
-    suspend fun insert(event: Event) {
+    suspend fun insert(event: Event) = withContext(Dispatchers.IO) {
         val eventDto = event.toEventDto()
         try {
             Log.d("AppDebug", "EventRepository: Intentando guardar evento con id : ${event.eventId}")
@@ -41,26 +42,59 @@ class EventRepository(
                 Log.e("AppDebug", "API Error: Code $errorCode - Message: $errorMessage")
                 event.isSynced = false
                 eventDao.insertEvent(event)
+                throw Exception("Error del servidor: ${response.code()}")
             }
-        } catch (e: IOException) {
-            Log.e("AppDebug", "Network Error: Could not connect to the server.", e)
+        } catch (e: Exception) {
+            Log.e("AppDebug", "Network Error in insert(): Could not connect to the server.", e)
             event.isSynced = false
             eventDao.insertEvent(event)
+            throw e
         }
     }
 
-    suspend fun refreshEvents() {
+    suspend fun updateEvent(event: Event) = withContext(Dispatchers.IO) {
         try {
-            // 1. Fetch events from the remote API
-            val remoteEvents = apiService.getAllEvents()
-            remoteEvents.body()?.let { remoteEvents-> eventDao.insertAll(remoteEvents) }
-            // 2. Insert the fetched events into the local database
+            val response = apiService.updateEvent(event.eventId, event.toEventDto())
+            if (response.isSuccessful) {
+                eventDao.updateEvent(event.copy(isSynced = true))
+            } else {
+                val errorCode = response.code()
+                val errorMessage = response.errorBody()?.string()
+                Log.e("AppDebug", "API Error in updateEvent(): Code $errorCode - Message: $errorMessage")
+                eventDao.updateEvent(event.copy(isSynced = false))
+            }
+        } catch (e: Exception) {
+            Log.e("AppDebug", "Network Error in updateEvent()", e)
+            eventDao.updateEvent(event.copy(isSynced = false))
+        }
+    }
 
-            Log.d("AppDebug", "EventRepository: Successfully refreshed events from remote.")
+    suspend fun deleteEvent(eventId: String) = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.deleteEvent(eventId)
+            if (response.isSuccessful) {
+                eventDao.deleteEventById(eventId)
+            } else {
+                 Log.e("AppDebug", "API Error in deleteEvent(): Code ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Log.e("AppDebug", "Network Error in deleteEvent()", e)
+        }
+    }
+
+    suspend fun refreshEvents() = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getAllEvents()
+            if (response.isSuccessful) {
+                response.body()?.let { remoteEvents ->
+                    eventDao.insertAll(remoteEvents)
+                    Log.d("AppDebug", "EventRepository: Successfully refreshed events from remote.")
+                }
+            } else {
+                Log.e("AppDebug", "EventRepository: Failed to fetch events. Code: ${response.code()}")
+            }
         } catch (e: Exception) {
             Log.e("AppDebug", "EventRepository: Failed to refresh events.", e)
-            // Re-throwing the exception so the Worker knows the operation failed
-            throw e
         }
     }
 }

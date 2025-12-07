@@ -1,31 +1,44 @@
 package com.example.ludico_app.viewmodels
 
 import android.util.Log
-import androidx.activity.result.launch
-import androidx.compose.animation.core.copy
-
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ludico_app.data.entities.Event
 import com.example.ludico_app.data.repository.EventRepository
+import com.example.ludico_app.data.session.SessionManager
 import com.example.ludico_app.model.CreateEventUiState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
-
 class CreateEventViewModel(
-    private val eventRepository: EventRepository // <-- CORRECCIÓN: El constructor ahora acepta el repositorio.
+    private val eventRepository: EventRepository,
+    private val savedStateHandle: SavedStateHandle,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
+
+    var isEditMode = false
+        private set // The UI can read this, but only the ViewModel can set it.
+    private var currentEventId: String? = null
+
+    init {
+        savedStateHandle.get<String>("eventId")?.let { eventId ->
+            if (eventId.isNotEmpty()) {
+                isEditMode = true
+                currentEventId = eventId
+                loadEventForEditing(eventId)
+            }
+        }
+    }
 
     private val _uiState = MutableStateFlow(CreateEventUiState())
     val uiState = _uiState.asStateFlow()
 
-    // --- FUNCIONES PARA ACTUALIZAR EL ESTADO DESDE LA UI ---
-    // (Estas funciones no cambian)
+    // --- UI STATE UPDATE FUNCTIONS ---
     fun onTitleChange(newTitle: String) {
         _uiState.update { it.copy(title = newTitle, titleError = null) }
     }
@@ -54,52 +67,86 @@ class CreateEventViewModel(
         _uiState.update { it.copy(maxParticipants = newMax) }
     }
 
-    // --- LÓGICA DE NEGOCIO (Ahora interactúa con la base de datos) ---
 
-    fun createEvent() {
-        if (!validateFields()) {
-            return
-        }
-
-        // Lanzamos una corrutina en el scope del ViewModel para la operación de base de datos.
+    private fun loadEventForEditing(eventId: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-
-            // 1. Creamos una instancia de nuestra entidad 'Event' con los datos del formulario.
-            val newEvent = Event(
-                title = _uiState.value.title,
-                description = _uiState.value.description,
-                gameType = _uiState.value.gameType,
-                date = _uiState.value.date,
-                time = _uiState.value.time,
-                location = _uiState.value.location,
-                maxParticipants = _uiState.value.maxParticipants.toIntOrNull() ?: 0,
-                creatorId = "1" // TODO: Reemplazar con el ID del usuario real logueado.
-            )
-
-            Log.d("AppDebug", "CreateEventVM: Intentando guardar evento con id : ${newEvent.eventId}")
-
-            // 2. Usamos el repositorio inyectado para guardar el evento en la base de datos.
-            eventRepository.insert(newEvent)
-            Log.d("AppDebug", "CreateEventVM: Evento guardado con id : ${newEvent.eventId}")
-            // 3. Actualizamos el estado de la UI para indicar que el proceso ha terminado y fue exitoso.
-            _uiState.update { it.copy(isLoading = false, eventCreatedSuccessfully = true) }
+            // Use first() if getEvent returns a Flow
+            val event = eventRepository.getEvent(eventId).first()
+            event?.let {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        title = event.title,
+                        description = event.description,
+                        gameType = event.gameType,
+                        date = event.date,
+                        time = event.time,
+                        location = event.location,
+                        maxParticipants = event.maxParticipants.toString()
+                    )
+                }
+            }
         }
     }
 
-    /**
-     * Resetea el estado de navegación para evitar que la app navegue hacia atrás
-     * automáticamente si la pantalla se recompone.
-     */
+    fun saveEvent() {
+        Log.d("AppDebug", "Paso 1: Se presionó el botón Guardar")
+        if (!validateFields()) {
+            Log.e("AppDebug", "ERROR: La validación de campos falló")
+            return
+        }
+
+        viewModelScope.launch {
+            Log.d("AppDebug", "Paso 2: Iniciando Coroutine y Loading")
+            _uiState.update { it.copy(isLoading = true) }
+
+            try{
+                val userId = sessionManager.fetchUserId() // Fetch real ID
+                Log.d("AppDebug", "Paso 3: UserId obtenido: '$userId'")
+                if(userId.isNullOrBlank()){
+                    Log.e("AppDebug", "ERROR FATAL: fetchUserId devolvió NULL. El usuario no parece estar logueado.")
+                    _uiState.update { it.copy(isLoading = false) } // <--- APAGAMOS LA RUEDA
+                    return@launch
+                }
+                if (isEditMode) {
+                    val updatedEvent = Event(
+                        eventId = currentEventId!!,
+                        title = _uiState.value.title,
+                        description = _uiState.value.description,
+                        gameType = _uiState.value.gameType,
+                        date = _uiState.value.date,
+                        time = _uiState.value.time,
+                        location = _uiState.value.location,
+                        maxParticipants = _uiState.value.maxParticipants.toIntOrNull() ?: 0,
+                        creatorId = userId
+                    )
+                    eventRepository.updateEvent(updatedEvent)
+            } else {
+                Log.d("AppDebug", "Paso 4: Creando objeto Event para enviar")
+                val newEvent = Event(
+                    title = _uiState.value.title,
+                    description = _uiState.value.description,
+                    gameType = _uiState.value.gameType,
+                    date = _uiState.value.date,
+                    time = _uiState.value.time,
+                    location = _uiState.value.location,
+                    maxParticipants = _uiState.value.maxParticipants.toIntOrNull() ?: 0,
+                    creatorId = userId
+                )
+                eventRepository.insert(newEvent)
+                Log.d("AppDebug", "Paso 5: Llamando a eventRepository.insert()")
+            }
+                _uiState.update { it.copy(isLoading = false, eventCreatedSuccessfully = true) }
+            } catch (e: Exception) {
+                Log.e("AppDebug", "CRITICAL FAILURE in saveEvent", e)
+                _uiState.update { it.copy(isLoading = false) } // Also add this to stop the spinner
+            }
+        }
+    }
+
     fun resetNavigationState() {
         _uiState.update { it.copy(eventCreatedSuccessfully = false) }
     }
 
-    /**
-     * Valida los campos del formulario.
-     * Devuelve 'true' si son válidos, 'false' en caso contrario.
-     * Actualiza el 'uiState' con los mensajes de error correspondientes.
-     */
     private fun validateFields(): Boolean {
         val currentState = _uiState.value
         val titleValid = currentState.title.isNotBlank() && currentState.title.length > 5
@@ -117,26 +164,3 @@ class CreateEventViewModel(
         return titleValid && descriptionValid && dateValid
     }
 }
-
-/**
- * Data class que modela el estado de la UI para CreateEventScreen.
- */
-data class CreateEventUiState(
-    // Campos del formulario
-    val title: String = "",
-    val description: String = "",
-    val gameType: String = "",
-    val date: String = "",
-    val time: String = "",
-    val location: String = "",
-    val maxParticipants: String = "",
-
-    // Errores de validación
-    val titleError: String? = null,
-    val descriptionError: String? = null,
-    val dateError: String? = null,
-
-    // Estado de la UI
-    val isLoading: Boolean = false,
-    val eventCreatedSuccessfully: Boolean = false
-)
