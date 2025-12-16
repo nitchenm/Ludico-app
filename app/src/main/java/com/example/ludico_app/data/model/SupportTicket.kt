@@ -11,11 +11,11 @@ data class SupportTicket(
     val status: String
 )
 
-data class CreateTicketRequest(
+/*data class CreateTicketRequest(
     val contactEmail: String,
     val subject: String,
     val description: String
-)
+)*/
 
 data class UpdateTicketRequest(
     val subject: String,

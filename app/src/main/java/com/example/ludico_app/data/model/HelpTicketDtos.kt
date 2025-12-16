@@ -5,7 +5,7 @@ package com.example.ludico_app.data.model
  * DTO (Data Transfer Object) para enviar la solicitud de creación de un ticket.
  * Los nombres de las variables deben coincidir con los campos de tu entidad en Spring Boot.
  */
-data class CreateTicketRequest(
+data class  CreateTicketRequest(
     val contactEmail: String,
     val subject: String,
     val description: String
