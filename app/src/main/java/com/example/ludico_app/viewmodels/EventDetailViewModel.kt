@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.ludico_app.LudicoApplication
 import com.example.ludico_app.data.repository.EventRepository
+import com.example.ludico_app.data.session.SessionManager
 import com.example.ludico_app.model.EventDetailUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,7 +25,8 @@ import kotlinx.coroutines.flow.stateIn
 
 class EventDetailViewModel(
     eventRepository: EventRepository,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    sessionManager: SessionManager
 ) : ViewModel() {
 
     private val eventId: String? = savedStateHandle["eventId"]
@@ -34,6 +36,7 @@ class EventDetailViewModel(
     }
     val uiState: StateFlow<EventDetailUiState> =
         if (eventId != null) {
+            val userId = sessionManager.fetchUserId()
             eventRepository.getEvent(eventId)
                 .filterNotNull()
                 .flatMapLatest { event ->
@@ -42,7 +45,7 @@ class EventDetailViewModel(
                         EventDetailUiState(
                             event = event,
                             host = host,
-                            isUserTheCreator = event.creatorId == "1", // TODO: Usar ID de usuario logueado
+                            isUserTheCreator = event.creatorId == userId,
                             isLoading = false
                         )
                     }
@@ -101,7 +104,8 @@ class EventDetailViewModel(
 
                 return EventDetailViewModel(
                     application.eventRepository,
-                    savedStateHandle
+                    savedStateHandle,
+                    application.sessionManager
                 ) as T
             }
         }

@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,10 +31,10 @@ import java.util.Calendar
 @Composable
 fun CreateEventScreen(
     navViewModel: NavViewModel,
-
     createEventViewModel: CreateEventViewModel = viewModel()
 ) {
     val uiState by createEventViewModel.uiState.collectAsState()
+    val isEditMode = createEventViewModel.isEditMode
 
     // Estados para los diálogos.
     var showDatePicker by remember { mutableStateOf(false) }
@@ -49,7 +50,7 @@ fun CreateEventScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Crear Evento", fontWeight = FontWeight.Bold) },
+                title = { Text(if (isEditMode) "Editar Evento" else "Crear Evento", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navViewModel.onNavEvent(NavEvent.Back) }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver atrás")
@@ -143,7 +144,7 @@ fun CreateEventScreen(
                 ) { Text("Cancelar") }
 
                 Button(
-                    onClick = createEventViewModel::createEvent, // Llama a la función del ViewModel
+                    onClick = createEventViewModel::saveEvent, // Llama a la función del ViewModel
                     modifier = Modifier.weight(1f),
                     enabled = !uiState.isLoading, // Deshabilitar mientras carga
                     shape = RoundedCornerShape(8.dp),
@@ -152,7 +153,7 @@ fun CreateEventScreen(
                     if (uiState.isLoading) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onSecondary)
                     } else {
-                        Text("Crear Evento")
+                        Text(if (isEditMode) "Guardar Cambios" else "Crear Evento")
                     }
                 }
             }
@@ -293,33 +294,39 @@ private fun FormDropdownField(
 
     Column(modifier = Modifier.padding(bottom = 16.dp)) {
         Text(label, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
+        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
             TextField(
-                modifier = Modifier.fillMaxWidth().menuAnchor(),
-                readOnly = true,
-                value = selectedOption.ifEmpty { options.getOrNull(0) ?: "" },
+                value = selectedOption,
                 onValueChange = {},
+                readOnly = true,
+                modifier = Modifier.fillMaxWidth().menuAnchor(),
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 shape = RoundedCornerShape(8.dp),
                 colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledIndicatorColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+
+                    // Colores para cuando no está deshabilitado
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+
+                    // --- CAMBIO AQUÍ ---
+                    // En lugar de containerColor, usa estos dos:
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                    unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             )
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                options.forEach { selectionOption ->
+                options.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(selectionOption) },
+                        text = { Text(option) },
                         onClick = {
-                            onSelectionChange(selectionOption)
+                            onSelectionChange(option)
                             expanded = false
                         }
                     )

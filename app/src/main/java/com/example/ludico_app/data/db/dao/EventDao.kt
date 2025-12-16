@@ -27,7 +27,7 @@ interface EventDao {
      * Devuelve un Flow, lo que significa que la UI se actualizará automáticamente si los datos de este evento cambian.
      */
     @Query("SELECT * FROM events WHERE eventId = :id")
-    fun getEvent(id: String?): Flow<Event?>
+    fun getEvent(id: String): Flow<Event?>
 
     /**
      * Obtiene todos los eventos de la base de datos, ordenados por fecha descendente.
@@ -53,4 +53,7 @@ interface EventDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(events: List<Event>)
+
+    @Query("DELETE FROM events WHERE eventId = :eventId")
+    suspend fun deleteEventById(eventId: String)
 }

@@ -49,6 +49,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     implementation(libs.androidx.ui.test.junit4)
+    implementation(libs.androidx.ui.graphics)
     // --- LIMPIEZA Y SINCRONIZACIÓN DE DEPENDENCIAS DE ROOM ---
 
     // Define una única versión para todas las dependencias de Room.
@@ -80,6 +81,7 @@ dependencies {
     implementation("androidx.compose.material3:material3-window-size-class:1.2.1") // Usar una versión del BOM
     implementation("androidx.activity:activity-compose:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+    implementation("javax.inject:javax.inject:1")
 
     // Retrofit y Gson Converter
     implementation("com.squareup.retrofit2:retrofit:2.11.0")

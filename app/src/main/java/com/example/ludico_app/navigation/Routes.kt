@@ -12,4 +12,10 @@ sealed class Routes (val route: String) {
     data object CreateEvent: Routes ("create_event")
 
     data object Profile : Routes("profile")
+
+    data object Support : Routes("support")
+
+    data object EditEvent : Routes("edit_event/{eventId}"){
+        fun createRoute(eventId: String) ="edit_event/$eventId"
+    }
 }

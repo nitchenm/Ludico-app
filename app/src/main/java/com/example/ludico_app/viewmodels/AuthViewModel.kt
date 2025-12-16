@@ -41,11 +41,17 @@ class AuthViewModel(
             try {
                 val response = userRepository.login(_uiState.value.email, _uiState.value.password)
                 if (response.isSuccessful) {
-                    response.body()?.token?.let {
-                        sessionManager.saveAuthToken(it)
-                        Log.d("AppDebug", "AuthVM: Token saved successfully.")
+                    val authData = response.body()
+                    if(authData != null){
+                        sessionManager.saveAuthToken(authData.token)
+                        sessionManager.saveUserId(authData.userId)
+
+                        Log.d("AppDebug", "AuthVM: Login exitoso. Token y UserID (${authData.userId}) guardados.")
+                        navViewModel.onNavEvent(NavEvent.ToHome)
+                    }else{
+                        Log.e("AppDebug", "AuthVM: El cuerpo de la respuesta es nulo")
                     }
-                    navViewModel.onNavEvent(NavEvent.ToHome)
+
                 } else {
                     _uiState.update { it.copy(passwordError = "Invalid credentials") }
                 }
